@@ -1,4 +1,4 @@
 interface:
   display_name: "SPDD Analysis"
   short_description: "Analyze requirements strategically"
-  default_prompt: "Use $spdd-analysis to analyze this business requirement against the codebase and save the enriched SPDD analysis. After saving it, show the /spdd-reasons-canvas command and ask for explicit user confirmation before finalizing; do not submit early because submission terminates the session."
+  default_prompt: "Use $spdd-analysis to analyze this business requirement against the codebase and save the enriched SPDD analysis."

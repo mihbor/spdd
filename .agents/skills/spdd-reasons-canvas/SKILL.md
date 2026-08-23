@@ -428,27 +428,15 @@ Input can be provided in two ways:
    - Safeguards: [constraint count] constraints defined
    ```
 
-   Saving the prompt is **not** the end of this workflow. The implementation handoff in Step 6 is a mandatory interaction gate and MUST happen before the session is finalized.
+6. **Ask for confirmation to proceed. DO NOT proceed without user confirmation!**
 
-6. **Ask for confirmation to proceed. DO NOT proceed or finalize without user confirmation!**
+   > "The REASONS-Canvas structured prompt is ready. Would you like me to proceed with the implementation?"
 
-   This is a mandatory confirmation step, not an optional closing message:
-
-   a. After showing the summary, ask:
-
-      > "The REASONS-Canvas structured prompt is ready. Would you like me to proceed with the implementation?"
-
-   b. Do **not** invoke `submit`, return a final/terminal response, or otherwise end the session before the user answers this question. The `submit` action terminates the session, so using it immediately after saving the prompt makes the required implementation gate impossible.
-
-   c. If the user confirms, invoke `/spdd-generate` with the saved prompt file as input.
-
-   d. If the user declines, acknowledge that the prompt remains saved and do not invoke the next workflow. Only after the user has answered may the interaction be finalized when no further workflow is requested.
-
-   The REASONS-Canvas phase is complete only after the prompt has been saved **and** this confirmation gate has been presented to the user.
+   If the user confirms, invoke `/spdd-generate` with the saved prompt file as input. If the user declines, stop after saving the prompt.
 
 **Output**
 
-A fully-populated, implementation-ready REASONS-Canvas structured prompt saved to `spdd/prompt/<file-name>.md`, followed by a mandatory interactive handoff; implementation proceeds only upon user confirmation.
+A fully-populated, implementation-ready REASONS-Canvas structured prompt saved to `spdd/prompt/<file-name>.md`, then implementation upon user confirmation.
 
 **Guardrails**
 
@@ -457,9 +445,6 @@ A fully-populated, implementation-ready REASONS-Canvas structured prompt saved t
 - Do NOT include framework metadata (Objective, Construction Guidance, Quality Standards) in the final prompt
 - Do NOT leave placeholders or TODO items - generate complete, specific content
 - Do NOT implement code before user confirms the structured prompt
-- **MANDATORY HANDOFF GATE**: After saving the prompt, show the implementation handoff and ask for explicit user confirmation before finalizing the interaction.
-- **DO NOT SUBMIT EARLY**: Do not invoke `submit`, return a terminal response, or end the session between saving the prompt and receiving the user's answer; `submit` terminates the session and prevents the required implementation gate.
-- **HANDOFF OUTCOMES**: On confirmation, invoke `/spdd-generate` with the saved prompt file. On refusal, leave the saved prompt intact and finalize only after acknowledging the refusal.
 - File name MUST follow SPDD naming convention defined above
 - If no ticket or story number can be extracted from context, use `prompt` as the filename identifier
 - Always create `spdd/prompt/` directory if it does not exist
