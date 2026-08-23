@@ -345,6 +345,8 @@ Input can be provided in two ways:
 
    d. **Show summary to user**:
 
+   Saving the stories is **not** the end of this workflow. The SPDD analysis handoff in Step 9 is a mandatory interaction gate and MUST happen before the session is finalized.
+
    ```
    ✅ Story generation complete. Stories saved to `requirements/`
 
@@ -364,9 +366,19 @@ Input can be provided in two ways:
 
 9. **Offer to proceed with SPDD analysis**
 
-   > "Stories are ready. Would you like me to proceed with `/spdd-analysis` for any of the generated stories?"
+   This is a mandatory confirmation step, not an optional closing message:
 
-   If the user selects a story, invoke the `/spdd-analysis` workflow with that story file as input.
+   a. After showing the summary and next-step command, ask:
+
+      > "Stories are ready. Would you like me to proceed with `/spdd-analysis` for any of the generated stories?"
+
+   b. Do **not** invoke `submit`, return a final/terminal response, or otherwise end the session before the user answers this question. The `submit` action terminates the session, so using it immediately after saving the stories makes the required handoff impossible.
+
+   c. If the user confirms and selects a story, invoke the `/spdd-analysis` workflow with that story file as input.
+
+   d. If the user declines, acknowledge that the stories remain saved and do not invoke the next workflow. Only after the user has answered may the interaction be finalized when no further workflow is requested.
+
+   The story phase is complete only after the artifact(s) have been saved **and** this confirmation gate has been presented to the user.
 
 **Output**
 
@@ -383,6 +395,9 @@ Structured, INVEST-compliant epic or story document(s) saved to `requirements/`,
 - Do NOT generate code — this command produces stories only
 - Do NOT leave placeholders or TODO items — generate complete, specific content
 - Do NOT modify any existing files in the codebase
+- **MANDATORY HANDOFF GATE**: After saving the story document(s), show the `/spdd-analysis` command and ask for explicit user confirmation before finalizing the interaction.
+- **DO NOT SUBMIT EARLY**: Do not invoke `submit`, return a terminal response, or end the session between saving the story document(s) and receiving the user's answer; `submit` terminates the session and prevents the required handoff.
+- **HANDOFF OUTCOMES**: On confirmation, invoke `/spdd-analysis` with the selected story file. On refusal, leave the saved story document(s) intact and finalize only after acknowledging the refusal.
 - Do NOT split stories by technical layer (frontend/backend/database)
 - Do NOT create stories with complex inter-story dependencies
 - Do NOT over-fragment a single API endpoint into multiple stories

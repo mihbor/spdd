@@ -278,6 +278,8 @@ Input can be provided in two ways:
 
    c. **Show summary to user**:
 
+   Saving the analysis is **not** the end of this workflow. The REASONS Canvas handoff in Step 8 is a mandatory interaction gate and MUST happen before the session is finalized.
+
    ```
    ✅ Analysis complete. Enriched context saved to `spdd/analysis/<file-name>.md`
 
@@ -296,13 +298,23 @@ Input can be provided in two ways:
 
 8. **Offer to proceed with REASONS Canvas generation**
 
-   > "The enriched context is ready. Would you like me to proceed with `/spdd-reasons-canvas` using this analysis as input?"
+   This is a mandatory confirmation step, not an optional closing message:
 
-   If the user confirms, invoke the `/spdd-reasons-canvas` workflow with the saved analysis file as input.
+   a. After showing the summary and next-step command, ask:
+
+      > "The enriched context is ready. Would you like me to proceed with `/spdd-reasons-canvas` using this analysis as input?"
+
+   b. Do **not** invoke `submit`, return a final/terminal response, or otherwise end the session before the user answers this question. The `submit` action terminates the session, so using it immediately after saving the analysis makes the required handoff impossible.
+
+   c. If the user confirms, invoke the `/spdd-reasons-canvas` workflow with the saved analysis file as input.
+
+   d. If the user declines, acknowledge that the analysis remains saved and do not invoke the next workflow. Only after the user has answered may the interaction be finalized when no further workflow is requested.
+
+   The analysis phase is complete only after the artifact has been saved **and** this confirmation gate has been presented to the user.
 
 **Output**
 
-An enriched context document saved to `spdd/analysis/<file-name>.md` that transforms raw business requirements into a **strategic-level** analysis containing:
+An enriched context document saved to `spdd/analysis/<file-name>.md`, followed by a mandatory interactive handoff, that transforms raw business requirements into a **strategic-level** analysis containing:
 - Original business requirements (preserved verbatim)
 - Domain concept identification (existing and new concepts, conceptual relationships, business rules — grounded in codebase exploration)
 - Strategic approach (solution direction, key design decisions, trade-offs, alternatives considered)
@@ -320,6 +332,9 @@ An enriched context document saved to `spdd/analysis/<file-name>.md` that transf
 - Do NOT include implementation-level details (specific queries, JSON shapes, method signatures, annotations, component-layer inventories, step-by-step logic) — those belong in `/spdd-reasons-canvas`
 - Do NOT leave placeholders or TODO items — generate complete, specific content
 - Do NOT modify application/source files or unrelated existing files. The only permitted writes are the generated analysis document and, after explicit user consent, the deferred-scope ledger described in Step 5.
+- **MANDATORY HANDOFF GATE**: After saving the analysis, show the `/spdd-reasons-canvas` command and ask for explicit user confirmation before finalizing the interaction.
+- **DO NOT SUBMIT EARLY**: Do not invoke `submit`, return a terminal response, or end the session between saving the analysis and receiving the user's answer; `submit` terminates the session and prevents the required handoff.
+- **HANDOFF OUTCOMES**: On confirmation, invoke `/spdd-reasons-canvas` with the saved analysis file. On refusal, leave the saved analysis intact and finalize only after acknowledging the refusal.
 - Always read ALL `@` referenced files completely
 - Always create `spdd/analysis/` directory if it does not exist
 - File name MUST start with the extracted story number or explicit work-management ticket when either is available; otherwise use the `analysis` fallback

@@ -1,4 +1,4 @@
 interface:
   display_name: "SPDD Story"
   short_description: "Split requirements into stories"
-  default_prompt: "Use $spdd-story to decompose this requirement into INVEST-sized stories with acceptance criteria."
+  default_prompt: "Use $spdd-story to decompose this requirement into INVEST-sized stories with acceptance criteria. After saving them, show the /spdd-analysis command and ask for explicit user confirmation before finalizing; do not submit early because submission terminates the session."
