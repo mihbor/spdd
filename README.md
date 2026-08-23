@@ -29,7 +29,7 @@ The `SKILL.md` files use the shared Agent Skills layout and can be discovered fr
 
 The `agents/openai.yaml` files are optional Codex-specific metadata and are ignored by agents that do not use them. The instruction body is portable in principle, but individual tool names and workflow commands may require adjustment for the host agent.
 
-The detailed behavior and guardrails are defined in the individual `SKILL.md` files.
+The shared lifecycle, artifact handoffs, and cross-skill rules are defined in the root `AGENTS.md`. Detailed command behavior and guardrails remain in the individual `SKILL.md` files.
 
 ## Attribution and license
 
