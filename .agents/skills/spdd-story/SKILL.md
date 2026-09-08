@@ -165,13 +165,17 @@ Input can be provided in two ways:
 
    #### Section 4: Scope In / Scope Out
 
-   ```markdown
-   ### Scope In
-   - [Feature included in this story, bullet points]
+    ```markdown
+    ### Scope In
+    - [Feature included in this story, bullet points]
 
-   ### Scope Out
-   - [Feature NOT included in this story, bullet points]
-   ```
+    ### Scope Out
+    - [Feature NOT included in this story, bullet points]
+    ```
+
+    **Scope Out rule**: List only plausible near-misses — items a sensible reader could
+    reasonably mistake as in scope but that are explicitly excluded. Do NOT pad Scope Out with
+    unrelated ideas no reasonable reader would imagine in scope.
 
    #### Section 5: Acceptance Criteria (ACs)
 
@@ -226,10 +230,11 @@ Input can be provided in two ways:
     - [ ] ACs are written in business language — no implementation details leaked in
     - [ ] ACs cover happy path, validation/business rules, and error conditions
 
-   **Business Clarity**:
-    - [ ] Business value is clear and stated for a specific audience/role
-    - [ ] Scope In and Scope Out clearly delineate boundaries — no ambiguous overlap
-    - [ ] No duplication with other existing stories
+    **Business Clarity**:
+     - [ ] Business value is clear and stated for a specific audience/role
+     - [ ] Scope In and Scope Out clearly delineate boundaries — no ambiguous overlap
+     - [ ] Scope Out contains only plausible near-misses — no unrelated filler ideas
+     - [ ] No duplication with other existing stories
     - [ ] A QA engineer could write test cases from the ACs without reading source code
 
    **Sizing and Independence**:
@@ -389,6 +394,7 @@ Structured, INVEST-compliant epic or story document(s) saved to `requirements/`,
 - Do NOT specify HOW to implement — only WHAT the expected behavior is
 - Do NOT prescribe technical solutions in ACs (no caching strategies, indexing approaches, query patterns, error JSON formats, P95/P99 metrics)
 - Do NOT include security implementation details in ACs (no "use parameterized queries", "sanitize HTML", etc.) — those are `/spdd-reasons-canvas` Safeguards
+- Scope Out MUST list only plausible near-misses a sensible reader could mistake as in scope — never unrelated filler
 - ACs MUST use business language that a QA engineer or Product Owner can understand
 - ACs MUST include concrete numbers, examples, and expected outcomes
 - Each story MUST pass INVEST compliance checks
