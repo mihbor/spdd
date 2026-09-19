@@ -32,7 +32,31 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
 
    **IMPORTANT**: Read the ENTIRE file carefully. Each section provides critical guidance.
 
-3. **Analyze project context**
+3. **Record the implementation start in `spdd/done.md`**
+
+   As soon as the prompt file is known (before generating code), append a
+   section to the implementation log (create the file with the header from
+   the existing log if it does not exist yet):
+
+   ```
+   ## <STORY-ID>
+
+   - Prompt: `<prompt filename>`
+   - Impl start: <now, local time>
+   - Completed:
+   - Elapsed:
+   - Commit:
+   - Notes:
+   ```
+
+   Derive the story ID from the prompt filename. Record Impl start as the
+   actual current local time at the moment generation is invoked — read the
+   clock; never estimate it and never copy timestamps from analysis/prompt
+   filenames or neighboring log rows, which belong to earlier SPDD phases.
+   Leave the remaining fields empty until step 8. Never backfill completion
+   at this stage: the section stays open until the result is verified.
+
+4. **Analyze project context**
 
    Before generating code:
     - Identify the project's technology stack (e.g., Spring Boot, Java version)
@@ -42,7 +66,7 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
 
    **IMPORTANT**: Generated code MUST align with existing project conventions.
 
-4. **Validate the Operations sequence**
+5. **Validate the Operations sequence**
 
    Review the **Operations** section to verify:
 
@@ -65,7 +89,7 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
 
    **IMPORTANT**: Do NOT re-plan the sequence. The Operations order is the designed execution order from the Abstraction phase.
 
-5. **Generate code following Operations sequence**
+6. **Generate code following Operations sequence**
 
    For each operation in the **Operations** section (in order):
 
@@ -102,7 +126,7 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
     - Do NOT change error messages from Safeguards
     - DO reference existing project patterns for consistency
 
-6. **Batch validation after generation**
+7. **Batch validation after generation**
 
    After ALL code is generated, perform unified validation:
 
@@ -126,12 +150,20 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
     - Correct import statements
     - Ensure code follows project formatting standards
 
-7. **Report generation summary**
+8. **Report generation summary and record completion**
 
    Provide a summary to the user:
     - List of created files with their responsibilities
     - Any deviations or assumptions made
     - Validation results (pass/fail for each check)
+
+   Then close the section opened in step 3 of `spdd/done.md`: fill
+   Completed with the verification time (when the acceptance check passed —
+   headset confirmation, test run, or equivalent — never the code-written
+   time), Elapsed as finish minus start, Commit with the first line of the
+   commit message (pre-populate it as soon as the change is scoped, so the
+   log is complete before the commit exists and its hash is known — never
+   use the hash), and Notes with the verification outcome.
 
 **Review & Iteration Loop**
 
@@ -184,6 +216,7 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Always use the exact error messages from Safeguards
 - Always follow Norms for coding style and patterns
 - Always verify against Acceptance Criteria after generation
+- Always open the `spdd/done.md` section at invocation (step 3) and close it only after verification (step 8); never mark complete at code-written time
 - Always check for and fix linter errors after batch generation
 - When the user explicitly requests a commit, commit prompt and code changes together; otherwise do not create a commit automatically
 
