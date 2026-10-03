@@ -159,7 +159,7 @@ Run /spdd-sync on spdd/prompt/STORY-XXX-YYY-*.md to synchronize the prompt with 
 
 4. **Done.md tracking aids traceability** — Recording completion metadata provides a clear audit trail.
 
-5. **When Opencode appears stuck, be patient first** — If a session stops responding, give it a few more minutes before giving up. Models sometimes take longer than expected on complex tasks. Only if the session is truly unrecoverable should you create a new session. When creating a new session, always delete the old one first using `DELETE /session/{id}` to free resources. If a fresh session also gets stuck, try switching models — alternatives like `mimo-v2.6-flash` or `deepseek-v4.1-flash` may work when the default model fails.
+5. **When Opencode appears stuck, be patient first** — If a session stops responding, give it a few more minutes. Models sometimes take longer on complex tasks. If it's truly stuck, try `POST /session/{id}/abort` first — it cancels the in-progress prompt but keeps all prior context. After aborting, switch models or resend the prompt. Only if abort fails should you delete the session (`DELETE /session/{id}`) and create a new one. If a fresh session also gets stuck, try alternative models like `mimo-v2.6-flash` or `deepseek-v4.1-flash`.
 
 6. **Committing via Opencode is unreliable** — Verify commits with `git log` and `git status`; if the commit didn't land, perform it manually.
 

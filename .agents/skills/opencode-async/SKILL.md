@@ -100,6 +100,7 @@ During extensive experimentation, we chased several red herrings because the sym
 |--------|--------|----------|-------|
 | Create session | POST | `/session` | Body: `{}` |
 | Send async | POST | `/session/{id}/prompt_async` | Body: `{ "parts": [{ "type": "text", "text": "..." }] }` |
+| Abort running | POST | `/session/{id}/abort` | Aborts in-progress prompt, returns `boolean` |
 | Get messages | GET | `/session/{id}/message` | Returns array: `[user, assistant, ...]` |
 | List sessions | GET | `/session` | Includes model config per session |
 | Delete session | DELETE | `/session/{id}` | Deletes session and all its data, returns `boolean` |
@@ -182,6 +183,16 @@ Invoke-RestMethod -Uri "http://127.0.0.1:3333/session/$oldSessionID" -Method Del
 
 This removes the session and all its data. Returns `true` on success.
 
+## Aborting a stuck session
+
+If a session is stuck processing a prompt, abort it instead of deleting the session. This cancels the in-progress work but preserves all prior context:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:3333/session/$sessionID/abort" -Method Post | Out-Null
+```
+
+Returns `true` on success. After aborting, you can switch models or resend the prompt using the same session — no context is lost. Only delete the session if abort fails or the session is truly unrecoverable.
+
 ## Key takeaways
 
 1. **Use `Invoke-RestMethod`, never `curl.exe`** — this is the only thing that matters.
@@ -190,3 +201,4 @@ This removes the session and all its data. Returns `true` on success.
 4. **Reuse sessions with loaded context** — a session with 284k+ input tokens is worth keeping; switch models via API if needed.
 5. **Permission prompts are invisible without a GUI** — start the server with `--permission=*` or sessions will silently pause and die on server restart.
 6. **Delete old sessions when creating new ones** — use `DELETE /session/{id}` to clean up. This prevents resource leaks and keeps the session list manageable.
+7. **Abort before deleting** — if a session is stuck, try `POST /session/{id}/abort` first. It cancels the in-progress prompt but keeps all prior context. Only delete the session if abort doesn't work.
