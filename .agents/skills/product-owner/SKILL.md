@@ -117,9 +117,15 @@ Process Story-XXX-YYY through the SPDD pipeline:
 3. After I confirm the prompt, run /spdd-generate to implement
 ```
 
-### Story with existing prompt:
+### Story with existing prompt (implementation):
 ```
 Run /spdd-generate on spdd/prompt/STORY-XXX-YYY-*.md to implement the feature.
+Do NOT commit yet — I will run sanity checks first.
+```
+
+### After sanity checks pass (separate prompt):
+```
+Sanity checks passed. Please commit the changes with a descriptive message.
 ```
 
 ### Design change:
@@ -164,6 +170,8 @@ Run /spdd-sync on spdd/prompt/STORY-XXX-YYY-*.md to synchronize the prompt with 
 9. **Commit only after review tweaks** — Do not ask Opencode to commit immediately after `/spdd-generate`. Review first, request tweaks, then ask for a single commit. This avoids multiple commits per story.
 
 10. **Read the opencode-async skill before delegating** — During STORY-005-010, I used the wrong API endpoint (`/message` with `prompt` body) instead of the correct `/prompt_async` with `parts` body, wasting time. The opencode-async skill documents the exact API — always read it first, don't guess.
+
+11. **Never combine `/spdd-generate` and commit in one prompt** — Send `/spdd-generate` alone, wait for it to finish, then run sanity checks (compile, tests, manual review). Only after checks pass, send a separate prompt asking Opencode to commit. During STORY-006-009, I combined both and Opencode failed to commit, leaving uncommitted changes that I had to commit manually. The separate-prompt pattern lets you catch and fix issues before they're committed.
 
 ## Relationship to Other Skills
 
