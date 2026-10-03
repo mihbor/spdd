@@ -159,7 +159,7 @@ Run /spdd-sync on spdd/prompt/STORY-XXX-YYY-*.md to synchronize the prompt with 
 
 4. **Done.md tracking aids traceability** — Recording completion metadata provides a clear audit trail.
 
-5. **Opencode sessions can get stuck** — Sessions occasionally stop responding with empty text parts. Create a fresh session and resend remaining prompts.
+5. **When Opencode appears stuck, be patient first** — If a session stops responding, give it a few more minutes before giving up. Models sometimes take longer than expected on complex tasks. Only if the session is truly unrecoverable should you create a new session. When creating a new session, always delete the old one first using `DELETE /session/{id}` to free resources. If a fresh session also gets stuck, try switching models — alternatives like `mimo-v2.6-flash` or `deepseek-v4.1-flash` may work when the default model fails.
 
 6. **Committing via Opencode is unreliable** — Verify commits with `git log` and `git status`; if the commit didn't land, perform it manually.
 
@@ -172,6 +172,8 @@ Run /spdd-sync on spdd/prompt/STORY-XXX-YYY-*.md to synchronize the prompt with 
 10. **Read the opencode-async skill before delegating** — During STORY-005-010, I used the wrong API endpoint (`/message` with `prompt` body) instead of the correct `/prompt_async` with `parts` body, wasting time. The opencode-async skill documents the exact API — always read it first, don't guess.
 
 11. **Never combine `/spdd-generate` and commit in one prompt** — Send `/spdd-generate` alone, wait for it to finish, then run sanity checks (compile, tests, manual review). Only after checks pass, send a separate prompt asking Opencode to commit. During STORY-006-009, I combined both and Opencode failed to commit, leaving uncommitted changes that I had to commit manually. The separate-prompt pattern lets you catch and fix issues before they're committed.
+
+12. **Delete old Opencode sessions when creating new ones** — Use `DELETE /session/{id}` to clean up the previous session before creating a new one. This prevents resource leaks and keeps the session list manageable. The opencode-async skill documents the exact command.
 
 ## Relationship to Other Skills
 

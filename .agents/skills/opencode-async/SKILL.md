@@ -102,6 +102,7 @@ During extensive experimentation, we chased several red herrings because the sym
 | Send async | POST | `/session/{id}/prompt_async` | Body: `{ "parts": [{ "type": "text", "text": "..." }] }` |
 | Get messages | GET | `/session/{id}/message` | Returns array: `[user, assistant, ...]` |
 | List sessions | GET | `/session` | Includes model config per session |
+| Delete session | DELETE | `/session/{id}` | Deletes session and all its data, returns `boolean` |
 | Switch model | POST | `/api/session/{id}/model` | Body: `{ "model": { "id": "...", "providerID": "..." } }`, returns 204 |
 | SSE events | GET | `/session/{id}/event` | **Broken** in v1.14.48+ — known regression |
 
@@ -171,6 +172,16 @@ Invoke-RestMethod -Uri "http://127.0.0.1:3333/api/session/$sessionID/model" -Met
 
 Then send new prompts to the existing session — it will use the new model for subsequent messages while retaining all prior context.
 
+## Cleaning up old sessions
+
+When creating a new session, delete the old one to free up server resources and avoid confusion:
+
+```powershell
+Invoke-RestMethod -Uri "http://127.0.0.1:3333/session/$oldSessionID" -Method Delete | Out-Null
+```
+
+This removes the session and all its data. Returns `true` on success.
+
 ## Key takeaways
 
 1. **Use `Invoke-RestMethod`, never `curl.exe`** — this is the only thing that matters.
@@ -178,3 +189,4 @@ Then send new prompts to the existing session — it will use the new model for 
 3. **SSE streaming is broken** in recent versions — async + polling is the reliable approach.
 4. **Reuse sessions with loaded context** — a session with 284k+ input tokens is worth keeping; switch models via API if needed.
 5. **Permission prompts are invisible without a GUI** — start the server with `--permission=*` or sessions will silently pause and die on server restart.
+6. **Delete old sessions when creating new ones** — use `DELETE /session/{id}` to clean up. This prevents resource leaks and keeps the session list manageable.
