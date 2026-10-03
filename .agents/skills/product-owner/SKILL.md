@@ -53,16 +53,14 @@ Find or create the story file in `requirements/Story-*.md`. If only a high-level
 
 ### 2. Delegate via opencode-async
 
-Use the `opencode-async` skill to interact with Opencode's headless server:
+**Read the `opencode-async` skill first.** It contains the complete, correct API workflow. Do not guess at endpoints or request formats — the skill documents the exact commands.
 
-1. **Start the server** (background): `opencode serve --port 3333 --permission=*`
-2. **Create a session**: `Invoke-RestMethod -Uri "http://127.0.0.1:3333/session" -Method Post -Body '{}' -ContentType "application/json"`
-3. **Send the SPDD command** as an async prompt
-4. **Poll for results**: `Invoke-RestMethod -Uri "http://127.0.0.1:3333/session/$sessionID/message" -Method Get`
-
-**Critical rules from opencode-async:**
+Key points from the opencode-async skill:
 - **Always use `Invoke-RestMethod`, never `curl.exe`** — curl's CLIXML encoding causes JSON parse errors.
 - **Use `--permission=*`** — without a GUI, permission prompts will silently pause and kill the session.
+- **Send prompts to `/prompt_async`** with a `parts` body, not `/message`.
+- **Reuse sessions with loaded context** — don't create new sessions unnecessarily.
+- **Check for stuck sessions** — if output tokens stop growing, the session may be waiting for a permission prompt.
 
 ### 3. Follow the SPDD pipeline
 
@@ -164,6 +162,8 @@ Run /spdd-sync on spdd/prompt/STORY-XXX-YYY-*.md to synchronize the prompt with 
 8. **Referencing prior stories helps** — When a story builds on another, explicitly mention the prior story so Opencode loads relevant context.
 
 9. **Commit only after review tweaks** — Do not ask Opencode to commit immediately after `/spdd-generate`. Review first, request tweaks, then ask for a single commit. This avoids multiple commits per story.
+
+10. **Read the opencode-async skill before delegating** — During STORY-005-010, I used the wrong API endpoint (`/message` with `prompt` body) instead of the correct `/prompt_async` with `parts` body, wasting time. The opencode-async skill documents the exact API — always read it first, don't guess.
 
 ## Relationship to Other Skills
 
