@@ -12,10 +12,14 @@ Input can be provided in two ways:
 1. **Text description**: Direct text describing the requirement
 2. **File/folder reference**: Using `@` to reference files or folders containing requirements
 
+An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/STORY-001-001-202607241944-Analysis-....md`); in that case that file is the update target.
+
+**Update vs. create (default: in-place update)**: When the business input maps to a story or ticket identifier that already has one or more files in `spdd/analysis/`, DEFAULT to updating the latest matching file in place (overwrite, preserve filename). Only create a new timestamped analysis file when (a) no matching analysis exists, or (b) the user explicitly asks for a new analysis (e.g. "create new analysis", "new file", "keep history").
+
 **Examples**:
 
 ```
-# File reference
+# File reference (updates existing analysis in place when one matches, else creates)
 /spdd-analysis @requirements/token-usage-billing-story.md
 
 # Text description
@@ -23,6 +27,12 @@ Input can be provided in two ways:
 
 # Combined
 /spdd-analysis @requirements/billing-report.md additionally needs CSV export support
+
+# Force a new file even when a match exists
+/spdd-analysis @requirements/billing-report.md --new-analysis
+
+# Update a specific analysis file explicitly
+/spdd-analysis @spdd/analysis/STORY-001-001-202607241944-Analysis-monthly-report-export.md reflect the amended ACs in @requirements/billing-report.md
 ```
 
 **Steps**
@@ -47,6 +57,12 @@ Input can be provided in two ways:
     - Verify all `@` references were successfully read
     - If any file cannot be read, report the error and ask user to provide alternative
     - Confirm the consolidated context contains sufficient information to proceed
+
+   e. **Resolve update vs. create mode (default: update in place)**:
+    - Extract the story/ticket identifier from the business input when available (same priority as Step 7: story number first, then explicit ticket, else no identifier).
+    - If the input explicitly references an `@spdd/analysis/<file>.md`, that file is the update target — read it completely.
+    - Otherwise list files in `spdd/analysis/` matching the identifier. When at least one match exists AND the user has not explicitly asked for a new analysis, select the latest matching file (by timestamp in the filename) as the update target and read it completely.
+    - Create a new file only when no match exists or the user explicitly asked for a new analysis. Record the resolved mode (update + target path, or create) and use it in Step 7.
 
 2. **Concept-driven codebase exploration**
 
@@ -83,6 +99,7 @@ Input can be provided in two ways:
    e. **Relevant SPDD context (scoped by concepts)**:
     - List files in `spdd/prompt/` and `spdd/analysis/` (if the directories exist)
     - Read ONLY those files whose filenames suggest relevance to the extracted concepts
+    - In update mode, the target analysis file from Step 1e is already read and serves as the patch base — do not treat it as mere background
     - If none are relevant or the directories are absent, skip this step
 
    f. **Controlled expansion (one additional hop only)**:
@@ -258,28 +275,39 @@ Input can be provided in two ways:
     - All analysis must be grounded in actual codebase exploration, not assumptions
     - Stay at a **conceptual/strategic** level — do NOT include implementation details (specific queries, JSON shapes, method signatures, annotations, component inventories). Those belong in the REASONS Canvas phase.
 
-7. **Save the enriched context document**
+ 7. **Save the enriched context document (default: update in place)**
 
-   a. **Derive file name**: `{IDENTIFIER}-{TIMESTAMP}-Analysis-{description}.md`
-    - **IDENTIFIER priority 1 — story number**: Extract the story number or story identifier from the referenced filename, document heading, or business context when available (for example, `STORY-001-001`). Preserve the established story-number format.
-    - **IDENTIFIER priority 2 — work-management ticket**: If no story number is available, extract an explicit ticket or reference number from whatever work-management system is named in the business context (for example, `PROJ-123`). Do not assume a particular work-management system or invent an identifier.
-    - **IDENTIFIER fallback**: If neither a story number nor a ticket number can be extracted, use `analysis`.
-    - **TIMESTAMP**: `YYYYMMDDHHmm` (current time)
-    - **description**: Derive from business context — kebab-case, < 10 words
+   Use the mode resolved in Step 1e.
 
-   Examples:
-    - `STORY-001-001-202607241944-Analysis-octasphere-tile-adjacency.md`
-    - `PROJ-123-202607241944-Analysis-monthly-report-export.md`
-    - `analysis-202607241944-Analysis-greenfield-domain-model.md`
+   a. **Update mode (default when a matching analysis exists)**:
+    - Overwrite the target file resolved in Step 1e — preserve its filename (do NOT rename, do NOT add a new timestamp).
+    - Refresh the `## Original Business Requirement` block with the current business input verbatim.
+    - Patch only the sections affected by the change (concepts, decisions, risks, AC-coverage rows); preserve unaffected content and intent.
+    - Re-verify AC coverage for EVERY AC (old and new) and keep cross-section consistency.
+    - Ensure directory `spdd/analysis/` exists (create if not), then write the complete document back to the same path.
 
-   b. **Create directory and write file**:
-    - Ensure directory `spdd/analysis/` exists under the project root (create if not)
-    - Write the complete enriched context document to `spdd/analysis/<file-name>.md`
+   b. **Create mode (no match, or user explicitly asked for a new analysis)**:
+    - **Derive file name**: `{IDENTIFIER}-{TIMESTAMP}-Analysis-{description}.md`
+     - **IDENTIFIER priority 1 — story number**: Extract the story number or story identifier from the referenced filename, document heading, or business context when available (for example, `STORY-001-001`). Preserve the established story-number format.
+     - **IDENTIFIER priority 2 — work-management ticket**: If no story number is available, extract an explicit ticket or reference number from whatever work-management system is named in the business context (for example, `PROJ-123`). Do not assume a particular work-management system or invent an identifier.
+     - **IDENTIFIER fallback**: If neither a story number nor a ticket number can be extracted, use `analysis`.
+     - **TIMESTAMP**: `YYYYMMDDHHmm` (current time)
+     - **description**: Derive from business context — kebab-case, < 10 words
+
+    Examples:
+     - `STORY-001-001-202607241944-Analysis-octasphere-tile-adjacency.md`
+     - `PROJ-123-202607241944-Analysis-monthly-report-export.md`
+     - `analysis-202607241944-Analysis-greenfield-domain-model.md`
+
+    - **Create directory and write file**:
+     - Ensure directory `spdd/analysis/` exists under the project root (create if not)
+     - Write the complete enriched context document to `spdd/analysis/<file-name>.md`
 
    c. **Show summary to user**:
 
    ```
-   ✅ Analysis complete. Enriched context saved to `spdd/analysis/<file-name>.md`
+   ✅ Analysis complete. Enriched context saved to `spdd/analysis/<file-name>.md` (updated in place | created new)
+
 
    📋 Analysis summary:
    - Analysis identifier: [story number, ticket number, or `analysis` fallback]
@@ -302,14 +330,17 @@ Input can be provided in two ways:
 
 **Output**
 
-An enriched context document saved to `spdd/analysis/<file-name>.md` that transforms raw business requirements into a **strategic-level** analysis containing:
-- Original business requirements (preserved verbatim)
+An enriched context document saved to `spdd/analysis/<file-name>.md` (updated in place by default; newly created only when no match exists or explicitly requested) that transforms raw business requirements into a **strategic-level** analysis containing:
+- Original business requirements (preserved verbatim, refreshed on update)
 - Domain concept identification (existing and new concepts, conceptual relationships, business rules — grounded in codebase exploration)
 - Strategic approach (solution direction, key design decisions, trade-offs, alternatives considered)
 - Risk & gap analysis (ambiguities, edge cases, technical risks, AC coverage assessment)
 
 **Guardrails**
 
+- DEFAULT to in-place update when a matching analysis file exists; create a new timestamped file only when no match exists or the user explicitly asks for a new analysis
+- In update mode, do NOT rename the file — preserve the original filename; only the file contents change
+- In update mode, apply the minimal-change principle: patch only affected sections, preserve unaffected content and original design intent, and re-verify full AC coverage
 - Do NOT proceed without business requirement input
 - Do NOT skip codebase exploration — analysis MUST be grounded in actual codebase state
 - Do NOT exhaustively read the entire codebase — use concept-driven scoping from the business requirement to target only relevant areas
@@ -319,10 +350,10 @@ An enriched context document saved to `spdd/analysis/<file-name>.md` that transf
 - Do NOT generate code — this command produces analysis only
 - Do NOT include implementation-level details (specific queries, JSON shapes, method signatures, annotations, component-layer inventories, step-by-step logic) — those belong in `/spdd-reasons-canvas`
 - Do NOT leave placeholders or TODO items — generate complete, specific content
-- Do NOT modify application/source files or unrelated existing files. The only permitted writes are the generated analysis document and, after explicit user consent, the deferred-scope ledger described in Step 5.
-- Always read ALL `@` referenced files completely
+- Do NOT modify application/source files or unrelated existing files. The only permitted writes are the updated-or-generated analysis document and, after explicit user consent, the deferred-scope ledger described in Step 5.
+- Always read ALL `@` referenced files completely (including the update-target analysis file in update mode)
 - Always create `spdd/analysis/` directory if it does not exist
-- File name MUST start with the extracted story number or explicit work-management ticket when either is available; otherwise use the `analysis` fallback
+- In create mode, file name MUST start with the extracted story number or explicit work-management ticket when either is available; otherwise use the `analysis` fallback
 - Do not assume a particular work-management system when extracting ticket numbers
 - Acceptance Criteria coverage MUST assess every AC from the requirement
 - Risk & Gap Analysis MUST surface any ambiguities — do NOT silently assume
