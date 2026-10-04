@@ -161,9 +161,10 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
    Completed with the verification time (when the acceptance check passed —
    headset confirmation, test run, or equivalent — never the code-written
    time), Elapsed as finish minus start, Commit with the first line of the
-   commit message (pre-populate it as soon as the change is scoped, so the
-   log is complete before the commit exists and its hash is known — never
-   use the hash), and Notes with the verification outcome.
+   commit message (write it when you commit the code — craft a concise,
+   descriptive message following conventional commit format, e.g.,
+   "feat(ai): implement AI city founding for STORY-021-001" — never use
+   the hash), and Notes with the verification outcome.
 
 **Review & Iteration Loop**
 
