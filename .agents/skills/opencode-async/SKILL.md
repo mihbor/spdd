@@ -115,13 +115,7 @@ When opencode needs to access paths outside the workspace (e.g., `C:\Users\MBor\
 
 If the server restarts while the session is paused, the session is lost.
 
-**Fix: Start the server with auto-approve for all actions:**
-
-```powershell
-opencode serve --port 3333 --permission=*
-```
-
-Or set it globally in `~/.config/opencode/opencode.json`:
+**Fix: Set auto-approve globally in `~/.config/opencode/opencode.json`:**
 
 ```json
 {
@@ -129,7 +123,7 @@ Or set it globally in `~/.config/opencode/opencode.json`:
 }
 ```
 
-**Important:** `--permission=*` is required when using the API headlessly. Without a GUI, permission prompts have nowhere to appear — the session will silently pause and eventually die when the server restarts.
+**Important:** Setting `"permission": "*"` in the config is required when using the API headlessly. Without a GUI, permission prompts have nowhere to appear — the session will silently pause and eventually die when the server restarts.
 
 **If you notice a session stuck** (output tokens not growing after several minutes), check the server logs for `permission=` entries — the session is likely waiting for a GUI prompt you can't see.
 
@@ -199,6 +193,6 @@ Returns `true` on success. After aborting, you can switch models or resend the p
 2. **JSON parse errors in logs mean curl** — do not diagnose them as config, credential, or server bugs.
 3. **SSE streaming is broken** in recent versions — async + polling is the reliable approach.
 4. **Reuse sessions with loaded context** — a session with 284k+ input tokens is worth keeping; switch models via API if needed.
-5. **Permission prompts are invisible without a GUI** — start the server with `--permission=*` or sessions will silently pause and die on server restart.
+5. **Permission prompts are invisible without a GUI** — set `"permission": "*"` in the config or sessions will silently pause and die on server restart.
 6. **Delete old sessions when creating new ones** — use `DELETE /session/{id}` to clean up. This prevents resource leaks and keeps the session list manageable.
 7. **Abort before deleting** — if a session is stuck, try `POST /session/{id}/abort` first. It cancels the in-progress prompt but keeps all prior context. Only delete the session if abort doesn't work.
