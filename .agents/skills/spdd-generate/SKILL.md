@@ -161,10 +161,16 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
    Completed with the verification time (when the acceptance check passed —
    headset confirmation, test run, or equivalent — never the code-written
    time), Elapsed as finish minus start, Commit with the first line of the
-   commit message (write it when you commit the code — craft a concise,
-   descriptive message following conventional commit format, e.g.,
-   "feat(ai): implement AI city founding for STORY-021-001" — never use
-   the hash), and Notes with the verification outcome.
+   INTENDED commit message — craft it now (concise, conventional-commit
+   format, e.g. "feat(ai): implement AI city founding for STORY-021-001" —
+   never use the hash), and Notes with the verification outcome.
+
+   **Commit ordering (avoids amend/follow-up commits)**: the Commit field
+   is filled BEFORE any commit is created. When the user requests a commit,
+   stage `spdd/done.md` together with the prompt and code changes and
+   create ONE commit using that exact recorded message. Never commit first
+   and fill the Commit field afterwards — that ordering forces an amend or
+   an extra commit to fix the log.
 
 **Review & Iteration Loop**
 
@@ -187,7 +193,7 @@ If issues are discovered after generation (during testing or code review), follo
 
 4. **Regenerate affected code**: Only regenerate the components affected by the prompt change
 
-5. **Commit together when requested**: If the user explicitly requests a commit, commit the updated prompt and code together to maintain traceability; otherwise leave the changes for user review
+5. **Commit together when requested**: If the user explicitly requests a commit, commit the updated prompt and code together (plus the `spdd/done.md` log entry recording that exact message) to maintain traceability; otherwise leave the changes for user review
 
 **Example iteration**:
 ```
@@ -218,6 +224,7 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Always follow Norms for coding style and patterns
 - Always verify against Acceptance Criteria after generation
 - Always open the `spdd/done.md` section at invocation (step 3) and close it only after verification (step 8); never mark complete at code-written time
+- Always record the intended commit message in the `spdd/done.md` Commit field BEFORE creating any commit, and stage `spdd/done.md` in that same commit; never commit first and backfill the log afterwards (no amend, no extra log-only commit)
 - Always check for and fix linter errors after batch generation
 - When the user explicitly requests a commit, commit prompt and code changes together; otherwise do not create a commit automatically
 
