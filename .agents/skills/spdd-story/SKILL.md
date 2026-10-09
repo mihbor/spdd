@@ -381,7 +381,10 @@ Input can be provided in two ways:
       ```
       **Term** — Concise definition derived from the story's context, preserving the original meaning.
       ```
-    - Keep definitions concise (one to two sentences) and grounded in the story's business language.
+    - Write for quick reference: use one or two sentences to identify the concept and distinguish it from related terms, grounded in the story's business language.
+    - Keep detailed rules in requirements: omit formulas, numerical thresholds, exhaustive catalogs, and procedural mechanics unless essential to the term's meaning. Link to the relevant epic or story when readers need those details.
+    - Leave out implementation and UI specifications such as internal identifiers, storage formats, keyboard shortcuts, exact interface copy, and performance budgets.
+    - Use a canonical definition with `See …` entries for aliases or overlapping terms instead of repeating the explanation.
     - If a term already exists and the new story adds meaningful nuance, update the existing entry rather than duplicating it.
 
    c. **Report glossary changes**:
