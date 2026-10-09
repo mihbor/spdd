@@ -373,10 +373,10 @@ Input can be provided in two ways:
 
    a. **Identify new terms**:
     - Scan the newly created epic and story files for domain-specific terms, acronyms, proper nouns, and specialized concepts.
-    - Compare against existing entries in `requirements/Glossary.md` (if it exists) to avoid duplicates.
+    - Compare against existing entries in `docs/Glossary.md` (if it exists) to avoid duplicates.
 
    b. **Create or update the glossary**:
-    - If `requirements/Glossary.md` does not exist, create it with the standard header and alphabetical section structure.
+    - If `docs/Glossary.md` does not exist, create it with the standard header and alphabetical section structure.
     - For each new term, add an entry under the appropriate letter section, formatted as:
       ```
       **Term** — Concise definition derived from the story's context, preserving the original meaning.
@@ -399,7 +399,7 @@ Structured, INVEST-compliant epic or story document(s) saved to `requirements/`,
 - Abstract task analysis and split strategy
 - Complete stories with Background, Business Value, Dependencies and Assumptions, Scope In/Out, and business-focused Acceptance Criteria
 - Quality-checked against business clarity, sizing, and independence checklists
-- Updated `requirements/Glossary.md` with any new domain terms introduced by the stories
+- Updated `docs/Glossary.md` with any new domain terms introduced by the stories
 
 **Guardrails**
 
@@ -424,7 +424,7 @@ Structured, INVEST-compliant epic or story document(s) saved to `requirements/`,
 - All epics MUST produce something demonstrable to the user; each story SHOULD ideally be demonstrable too
 - Always read ALL `@` referenced files completely
 - Always create `requirements/` directory if it does not exist
-- Always update `requirements/Glossary.md` when new stories introduce domain-specific terms not yet covered
+- Always update `docs/Glossary.md` when new stories introduce domain-specific terms not yet covered
     - File names MUST follow the artifact-specific naming convention:
         - **Epics:** `Epic-{N}-{kebab-case-title}.md`
         - **Child stories:** `Story-{MODULE}-{SEQ}-{kebab-case-title}.md`
