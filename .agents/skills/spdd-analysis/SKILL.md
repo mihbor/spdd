@@ -202,7 +202,11 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
     - **If the user agrees to defer**: Append the item to `spdd/analysis/deferred.md` (create the file if it doesn't exist). Use the format below. Each entry must include the story identifier, the deferred item, and the rationale.
     - **If the user does not agree**: Keep the requirement in scope for the current analysis and document it as an AC that must be addressed.
 
-   Once a deferred item has been addressed (implemented in code or otherwise resolved), it MUST be **removed** from `spdd/analysis/deferred.md` — do not leave it in place with an updated status. The file tracks items that are still pending; resolved items no longer belong there.
+   Once a deferred item has been addressed, it MUST be **removed** from `spdd/analysis/deferred.md` — do not leave it in place with an updated status. The file tracks items that are still pending; resolved items no longer belong there. Removal is a three-step procedure, all three steps mandatory:
+     1. Delete the item's table row entirely — no strike-through, no "resolved"/"superseded" status flip, no explanatory remnant.
+     2. Update the counts to match: decrement the story's per-story count and the file's total. A totals mismatch is itself a defect.
+     3. Update or delete any summary-section references to the item (blocker lists, dependency chains, counts tables) so no dangling pointer remains.
+     "Addressed" covers every resolution path: implemented in code, superseded by a decision, rewritten out of the requirements, or otherwise settled. The history of the item lives in git, not in the ledger.
 
    Deferred entries MUST use this format:
 
@@ -362,6 +366,7 @@ An enriched context document saved to `spdd/analysis/<file-name>.md` (updated in
 - Any in-scope requirement deferred with user consent MUST be recorded in `spdd/analysis/deferred.md` (creating the file if needed)
 - Items that are out of scope, covered in another story, rejected alternatives, or pure design decisions MUST NOT be added to `deferred.md`
 - Resolved/deferred items that have been addressed MUST be removed from `deferred.md` — never updated in place with a "resolved" status
+- Removing a deferred item MUST delete its row, decrement the per-story count and file total, and clear any summary references to it; "addressed" includes implemented, superseded-by-decision, and rewritten-out-of-requirements
 
 **Context Integrity Guardrails**:
 
