@@ -1,0 +1,4 @@
+interface:
+  display_name: "SPDD Reverse"
+  short_description: "Codify existing code into a prompt"
+  default_prompt: "Use $spdd-reverse to reverse-engineer this code area into a REASONS Canvas prompt for SPDD onboarding."
