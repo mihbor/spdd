@@ -34,6 +34,7 @@ High-level requirement
 - `spdd/prompt/` contains the implementation contract in the seven-section REASONS Canvas order: Requirements, Entities, Approach, Structure, Operations, Norms, and Safeguards.
 - The implementation code is the executable result. Code-first changes must be reflected back into the relevant prompt through `/spdd-sync`.
 - Handoffs must preserve traceability: retain the source requirement, carry its identifier into downstream artifact names when available, and link each generated artifact to the preceding artifact.
+- `spdd/done.md` is the implementation trace. `/spdd-generate` opens one section per prompt at invocation (start time) and closes it only after verification (completion time, elapsed time, intended commit message, verification notes); the Commit field is recorded before any commit is created, never backfilled afterwards.
 
 ## Cross-skill rules
 
@@ -44,5 +45,6 @@ High-level requirement
 5. When code changes first, synchronize the actual implementation rather than the originally planned implementation. Do not alter business requirements merely to document a refactoring.
 6. Detect and follow the project’s actual stack and architecture. Do not introduce layers, abstractions, or technologies that the requirement and codebase do not justify.
 7. Do not create commits unless the user explicitly requests them. When requested, commit related prompt and code changes together.
+8. Keep tool output small and execution observable in every phase: never dump raw logs — read slices only (e.g. tail the last N lines), truncate long lines, and strip ANSI escape sequences and carriage returns from captured output; prefer short polls with small outputs over long-wait calls when observing builds, servers, or browser runs; print the local time immediately before launching and immediately after return of long-running steps so durations stay on record.
 
 For command-specific behavior, always follow the applicable skill file in addition to this shared workflow.
