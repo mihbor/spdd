@@ -3,7 +3,7 @@ name: spdd-story
 description: Decompose high-level feature requirements into INVEST-compliant, business-focused stories with clear scope boundaries and testable acceptance criteria
 ---
 
-Decompose high-level feature requirements into structured, business-focused development stories. Each story is independently deliverable, scoped to 1-5 days of work, and includes concrete acceptance criteria written in business language. Stories are split according to the INVEST principle and serve as input for the SPDD workflow (`/spdd-analysis` → `/spdd-reasons-canvas` → `/spdd-generate`). This command focuses on the **"What"** and **"For whom"** — technical analysis and implementation details are left to downstream SPDD phases.
+Decompose high-level feature requirements into structured, business-focused development stories. Each story is independently deliverable, scoped to at most 3 core functional points, and includes concrete acceptance criteria written in business language. Stories are split according to the INVEST principle and serve as input for the SPDD workflow (`/spdd-analysis` → `/spdd-reasons-canvas` → `/spdd-generate`). This command focuses on the **"What"** and **"For whom"** — technical analysis and implementation details are left to downstream SPDD phases.
 
 **Input**: The argument after `/spdd-story` is a business requirement description or file reference.
 
@@ -95,7 +95,7 @@ Input can be provided in two ways:
    **Split rules**:
     - Each story contains at most 2-3 core functional points
     - Functional points within a story must have logical relevance
-    - Single story workload: 1-5 days
+    - Single story scope: at most 2-3 core functional points
     - Each story must deliver independent business value
     - All epics MUST produce something demonstrable to the user; each story SHOULD ideally be demonstrable too
 
@@ -249,8 +249,8 @@ Input can be provided in two ways:
     - [ ] **Independent**: Does not depend on other stories' implementation details
     - [ ] **Complete**: Contains a complete functional loop and acceptance criteria
     - [ ] **Valuable**: Delivers independent business value when implemented alone
-    - [ ] **Estimable**: Development team can accurately estimate development time
-    - [ ] **Right-sized**: 1-5 day workload, at most 3 core functional points
+    - [ ] **Estimable**: Scope and acceptance criteria are clear enough to plan with confidence
+    - [ ] **Right-sized**: at most 3 core functional points
     - [ ] **Testable**: Has clear test scenarios and acceptance conditions
 
    **Anti-patterns to avoid**:
@@ -422,7 +422,6 @@ Structured, INVEST-compliant epic or story document(s) saved to `requirements/`,
 - ACs MUST use business language that a QA engineer or Product Owner can understand
 - ACs MUST include concrete numbers, examples, and expected outcomes
 - Each story MUST pass INVEST compliance checks
-- Each story's workload MUST be between 1-5 days
 - Each story MUST contain at most 3 core functional points
 - All epics MUST produce something demonstrable to the user; each story SHOULD ideally be demonstrable too
 - Always read ALL `@` referenced files completely
