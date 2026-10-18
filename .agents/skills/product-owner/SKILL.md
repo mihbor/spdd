@@ -105,7 +105,7 @@ After `/spdd-generate` completes, delegate targeted audit questions to Opencode.
 
 Once all tweaks are applied and verified:
 1. Ask Opencode to commit the changes (or verify the commit landed).
-2. Update `spdd/done.md` with: story ID, prompt file, timestamps, duration, commit message, and notes.
+2. Update `spdd/done.md` with: story ID, prompt file, timestamps, duration, commit message, and notes. Follow-ups on work not yet signed off / committed update the latest entry (earliest start, latest completion, recomputed elapsed, actual commit message) — do not create a new entry per tweak.
 
 ## Delegation Prompt Examples
 
@@ -151,7 +151,7 @@ Run /spdd-sync on spdd/prompt/STORY-XXX-YYY-*.md to synchronize the prompt with 
 4. **Keep prompt sections internally consistent** — changes to entities, structure, operations, norms, or safeguards must be checked against related sections.
 5. **Detect and follow the project's actual stack** — do not introduce layers or technologies not justified by the requirement.
 6. **Track deferred items** — maintain `spdd/analysis/deferred.md` for in-scope items explicitly deferred with consent.
-7. **Update `spdd/done.md` on completion** — record timestamps, duration, commit message, and test results.
+7. **Update `spdd/done.md` on completion** — record timestamps, duration, commit message, and test results. Never open a new entry for follow-up tweaks on unsigned-off work; update the latest entry instead.
 
 ## Lessons Learned (Hard-Won Rules)
 

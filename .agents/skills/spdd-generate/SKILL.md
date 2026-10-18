@@ -193,6 +193,8 @@ If issues are discovered after generation (during testing or code review), follo
 
 4. **Regenerate affected code**: Only regenerate the components affected by the prompt change
 
+5. **Update `spdd/done.md`, do NOT append**: If the work being followed up on is not yet signed off / committed, update the latest `spdd/done.md` entry instead of opening a new section. Keep the earliest Impl start, extend Completed to the latest verification time, recompute Elapsed as the diff, amend Prompt/Notes with the follow-up rounds, and set Commit to the actual commit message once known. A new section is only opened for a fresh invocation after sign-off/commit.
+
 5. **Commit together when requested**: If the user explicitly requests a commit, commit the updated prompt and code together (plus the `spdd/done.md` log entry recording that exact message) to maintain traceability; otherwise leave the changes for user review
 
 **Example iteration**:
@@ -224,6 +226,7 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Always follow Norms for coding style and patterns
 - Always verify against Acceptance Criteria after generation
 - Always open the `spdd/done.md` section at invocation (step 3) and close it only after verification (step 8); never mark complete at code-written time
+- Follow-up tweaks on work that is not yet signed off / committed update the latest `spdd/done.md` entry (earliest start, latest completion, recomputed elapsed, actual commit message) — never append a new FOLLOWUP section
 - Always record the intended commit message in the `spdd/done.md` Commit field BEFORE creating any commit, and stage `spdd/done.md` in that same commit; never commit first and backfill the log afterwards (no amend, no extra log-only commit)
 - Always check for and fix linter errors after batch generation
 - When the user explicitly requests a commit, commit prompt and code changes together; otherwise do not create a commit automatically
