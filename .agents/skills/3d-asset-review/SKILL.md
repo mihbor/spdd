@@ -55,6 +55,15 @@ Capture the same framing with the current 2D sprite beside the model at true gam
 
 `tsc` clean plus self-test PASS plus three inspected angles. The summary states what was checked (angles, self-test result, baseline). Never present an asset the agent has not itself inspected from three angles.
 
+### 6. Cleanup on approval
+
+When the user approves an asset, delete its capture PNGs, its throwaway driver scripts, and close its preview tabs in the same turn as the trace/commit — never leave them behind:
+
+- Delete only this review's captures (repo-root `*.png` for the approved id plus its temp-dir shots) and its throwaway harness drivers (temp `.py`/`.js` capture scripts). Other sessions' files stay untouched.
+- Anything worth keeping gets checked into git instead of lingering in temp (e.g. a reusable runner goes under `tools/` with a README note).
+- Close only `preview-asset` tabs via the debug port (`PUT /json/close/<full-id>` on `localhost:9222`, matched by `preview-asset` URL). Game/bench tabs (`?nofog`, unit work) belong to other sessions — never close them.
+- Verify: zero `preview-asset` tabs remain and no captures or drivers for the approved id exist.
+
 ## Session budget
 
 Long review sessions die with provider `400 invalid parameters` once image history piles up (observed: 305 messages, 70 reads, 40+ PNGs). Deleting temp files does not help — context keeps the bytes. Only compaction or a fresh session drops them; fork does not (it copies image history — proven: a fork at the last good turn 400'd again).
