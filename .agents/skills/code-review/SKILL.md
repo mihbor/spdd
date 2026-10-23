@@ -26,6 +26,7 @@ Use best judgement when processing input.
 **Diffs alone are not enough.** After getting the diff, read the entire file(s) being modified to understand the full context. Code that looks wrong in isolation may be correct given surrounding logic, and vice versa.
 
 - Use the diff to identify which files changed; read the full files for control flow and conventions.
+- For registration/wiring changes, list every construction and call site of the touched seam and disposition each one.
 - When changes touch inputs, auth, storage, networking, rendering, or secrets, trace the trust boundary instead of reviewing the code in isolation.
 - Check `AGENTS.md` and any project conventions before claiming something does not fit.
 
@@ -49,6 +50,7 @@ Review in this priority order:
 **Contracts and measurements** - For benchmarks, reports, prompts, or generated artifacts:
 - Only flag references, paths, or claims that *this change* introduces or breaks.
 - Do not audit historical artifacts or unrelated documentation.
+- Scan added text for replacement chars and mixed line endings (`git diff` disagreeing with `git diff -w` on scale is a smell).
 - Wrong benchmark/method claims and dead paths introduced by the change are valid findings.
 
 **Structure and performance** - Only when they cause a concrete failure:
@@ -65,6 +67,8 @@ Before reporting anything, answer both questions:
 2. **How do you know?** A command, test, runtime probe, or a violated invariant stated in the code/docs.
 
 If either answer is missing, do not report it as a finding. Put it in a short "Unverified notes" section (one line each) or omit it. Do not invent hypothetical problems; name the realistic scenario.
+
+When the change asserts verification results (tests, builds, probes), re-run the cheapest one; anything not re-run goes in Coverage limits.
 
 ---
 
@@ -88,6 +92,7 @@ If unsure between two levels, choose the lower one and say what would raise it.
 - Prefer one verified High finding over five speculative Mediums.
 - If nothing meets the bar, say **"No actionable findings"** and list coverage limits.
 - Verify P0/P1 with a command or probe when feasible. If you cannot verify it, label it "unverified" and do not call it High.
+- If you repair incidental damage mid-review (encoding, whitespace), keep it byte-safe, disclose it, and never rework the change itself.
 
 ## Output
 
