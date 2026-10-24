@@ -64,6 +64,13 @@ metadata:
   then `satisfy x by element;`. Cross-story links live in the dependent
   story's package via explicit `private import OtherPackage::*;`.
 
+## Consumption
+
+- Impact analysis: `powershell -File tools/sysml-dependents.ps1 -Story
+  <MMM-SSS>` lists every satisfy link touching a story (requirement,
+  satisfying element, owning files). Built on `model-export`
+  `satisfySource`/`satisfyTarget` peers — the graph's first reader.
+
 ## Standing caveats
 
 - After any story edit, grep `sysml/` for the story ID: doc quotes go

@@ -95,12 +95,21 @@ Global flags: `--library-path`, `--config`, `--stdlib-path`,
   spec42 does not merge them. Cross-story links go in the dependent
   story's package via explicit `private import OtherPackage::*;`
   (e.g. LOD and Culling both satisfy grid's pinned `smallGrid`).
-- spec42 0.57 does NOT flag `attribute def X;` without `:> Base`
-  (negative-tested, zero diagnostics). Grep manually:
-  `Select-String -Pattern "attribute def \w+\s*;"`. Same for
-  `explain-diagnostic` gaps: error codes can return `catalog: null`
-  (e.g. `missing_import_visibility`) — fall back to the fix order
-  doctor → imports → names.
+- `attribute def X;` without `:> Base` is NOT flagged (negative-tested,
+  zero diagnostics) — grep manually. Same for `explain-diagnostic` gaps:
+  some error codes return `catalog: null` (e.g.
+  `missing_import_visibility`).
+- spec42 0.57 has no `verification case` / `analysis case`
+  (negative-tested: `recovered_package_body_element`; `use case` alone
+  validates). Do not model test links until tool support lands — record
+  enforcement in doc notes instead. Re-test each spec42 upgrade.
+- Binding gate: OMG Pilot via DeciSym `sysmlv2-validator`
+  (`%LOCALAPPDATA%\sysmlv2-validator\validate-sysml.cmd`, Maven 3.9.16
+  in `%LOCALAPPDATA%\maven`). It resolves imports incrementally in
+  argument order — pass files dependency-first (010 before 004, 012
+  before 006), never rely on directory scan order. A namespace error
+  that spec42 does not report is usually a forward reference: reorder,
+  don't rewrite.
 
 ## References
 
