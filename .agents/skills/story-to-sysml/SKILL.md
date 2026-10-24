@@ -39,6 +39,17 @@ metadata:
   counts, pins, machines, and links carry constraints. Prune attributes
   orphaned by dropped constraints. Both subject-without-constraint and
   empty part defs validate clean.
+- Story defects get fixed by corroboration count, not hunch: grep the
+  corpus for the number, weigh witnesses, prefer the side citing a source
+  file (CtP2 reference, decisions.md), fix toward it, and record the
+  provenance in both the story and the model doc. Precedent: the +3/+30
+  Scientist output (5 witnesses vs 1).
+- A satisfy witness may be imported: the link lives in the dependent's
+  package, but the usage it binds can come from another file's package
+  (e.g. radius visibility satisfied by a growth-package usage).
+- Integer math without Real types: percents as `x*250/100`, turn counts
+  as `(box-stored)/surplus` (exact when divisible), accumulation as
+  `after == before + rate`. Re-derive per file is waste; copy the shape.
 - Numbers: story numbers verbatim; invented or story-defined values marked
   as such; derivations shown step by step in plain language, no jargon.
 - Story examples pin as spot-checks, never as the whole table: mark which
