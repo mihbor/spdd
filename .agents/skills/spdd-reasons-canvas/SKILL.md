@@ -364,7 +364,24 @@ Input can be provided in two ways:
     - Verifiable
     - Complete coverage
 
-4. **Construct the final structured prompt**
+4. **Resolve requirement ambiguities before finalizing**
+
+   While drafting the canvas, classify every open decision:
+
+   a. **Implementation choice** — how to build something; behavior stays within what the story already requires. Keep it in the canvas section; no artifact upstream of the prompt changes.
+   b. **Requirement ambiguity or gap** — the observable behavior (acceptance) is underdetermined: cost basis, rounding, eligibility, refusal, ordering, or edge-case handling. The canvas must not decide this silently; treat it as a story defect and run the protocol below before saving the prompt.
+
+   For each requirement ambiguity:
+
+   a. **Record the finding in the analysis artifact first**: open the matching `spdd/analysis/*-Analysis-*.md` (match by ticket or story identifier). Add the ambiguity, the proposed interpretation, and its acceptance impact to `### Requirement Ambiguities`, or append a dated `### Canvas Resolutions (YYYY-MM-DD)` subsection naming the prompt file. After the user decides, update the same entry with the decision (story amended, or implementation-defined with rationale).
+   b. **Offer to update the story**: present the ambiguity, the proposed story edit (Scope, Business constraints, or a new or tightened AC), and its downstream effect (acceptance tests and the `sysml/requirements/` model). Ask explicitly with the AskUserQuestion tool whether to amend the story. Do NOT edit the story without explicit permission.
+   c. **If the user approves**: amend the story in its existing style without rewriting unrelated text, and add an `### Amendments` entry dated with the prompt file as provenance. Then update the affected `sysml/requirements/` package from the amended story (the requirements model sources only from stories; see the story-to-sysml skill).
+   d. **If the user declines**: record the decision and rationale in the analysis, resolve the point in the canvas as an implementation assumption, and mark it in the prompt as implementation-defined. Do not create a requirement def for it and do not present it as story-owned acceptance.
+   e. **Never invent acceptance criteria**: the canvas may choose behavior only as an implementation assumption; any behavior that acceptance tests must enforce belongs in the story first.
+
+   Complete this protocol before saving the prompt (step 6); the saved prompt must not contain requirement-level decisions that bypassed the story.
+
+5. **Construct the final structured prompt**
 
    Create a comprehensive, ready-to-implement prompt with:
 
@@ -396,7 +413,7 @@ Input can be provided in two ways:
     - No placeholders or "TODO" items
     - Clear, executable implementation tasks in Operations section
 
-5. **Save the fully-populated structured prompt to file**
+6. **Save the fully-populated structured prompt to file**
 
    a. **Derive file name**: `{TICKET}-{TIMESTAMP}-{ACTION}-{scope}-{description}.md`
     - **TICKET**: Extract ticket number (e.g., `PROJ-123`, `#42`, `ABC-1`) from business context if available; otherwise use the current story number; if neither is available, use `prompt`
@@ -426,11 +443,14 @@ Input can be provided in two ways:
    - Operations: [task count] implementation tasks
    - Norms: [key standards]
    - Safeguards: [constraint count] constraints defined
+   - Requirement ambiguities: [none | N resolved — story amended (ACs/scope) vs implementation-defined]
    ```
 
-6. **Ask for confirmation to proceed. DO NOT proceed without user confirmation!**
+7. **Ask for confirmation to proceed. DO NOT proceed without user confirmation!**
 
    > "The REASONS-Canvas structured prompt is ready. Would you like me to proceed with the implementation?"
+
+   State the outcome of the requirement-ambiguity protocol: none, or the story amendments made and the analysis findings updated.
 
    If the user confirms, invoke `/spdd-generate` with the saved prompt file as input. If the user declines, stop after saving the prompt.
 
@@ -445,6 +465,9 @@ A fully-populated, implementation-ready REASONS-Canvas structured prompt saved t
 - Do NOT include framework metadata (Objective, Construction Guidance, Quality Standards) in the final prompt
 - Do NOT leave placeholders or TODO items - generate complete, specific content
 - Do NOT implement code before user confirms the structured prompt
+- **Requirement ambiguity protocol is mandatory**: when the canvas must decide observable acceptance behavior, update the analysis findings and ask before amending the story; never resolve it silently in the prompt
+- **Story edits require explicit permission**: amend only after user approval, keep unrelated text intact, and record the date and prompt file under `### Amendments`
+- **No orphan requirement defs**: if the story is not amended, the decision stays implementation-defined in the prompt; do not add it to `sysml/requirements/`
 - File name MUST follow SPDD naming convention defined above
 - If no ticket or story number can be extracted from context, use `prompt` as the filename identifier
 - Always create `spdd/prompt/` directory if it does not exist
