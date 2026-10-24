@@ -74,7 +74,8 @@ Global flags: `--library-path`, `--config`, `--stdlib-path`,
 - Do not "fix" parse errors by deleting valid spec-aligned structure
   without re-running `check`.
 - Do not commit secrets or absolute local paths into shared models.
-- Where Spec42 and the OMG Pilot Implementation disagree, the Pilot
+- Where spec42 and `validate-sysml` (DeciSym `sysmlv2-validator`, built
+  on the OMG reference implementation) disagree, `validate-sysml`
   is the binding semantic gate (see `sysmlv2-skill`).
 - Name attributes so `owningPart.attribute` is self-describing
   (`scene.hasDirectionalLight`, not `scene.directionalPresent`).
@@ -103,13 +104,16 @@ Global flags: `--library-path`, `--config`, `--stdlib-path`,
   (negative-tested: `recovered_package_body_element`; `use case` alone
   validates). Do not model test links until tool support lands — record
   enforcement in doc notes instead. Re-test each spec42 upgrade.
-- Binding gate: OMG Pilot via DeciSym `sysmlv2-validator`
+- Binding gate: DeciSym `sysmlv2-validator`
   (`%LOCALAPPDATA%\sysmlv2-validator\validate-sysml.cmd`, Maven 3.9.16
-  in `%LOCALAPPDATA%\maven`). It resolves imports incrementally in
-  argument order — pass files dependency-first (010 before 004, 012
-  before 006), never rely on directory scan order. A namespace error
-  that spec42 does not report is usually a forward reference: reorder,
-  don't rewrite.
+  in `%LOCALAPPDATA%\maven`). `validate-sysml` resolves imports incrementally in
+  argument order — never invoke it on the directory; run
+  `powershell -File tools/validate-sysml.ps1`, which encodes the
+  canonical dependency-first order (010 before 004, 012 before 006).
+  A namespace error that spec42 does not report is usually a forward
+  reference: fix the script's order list, don't rewrite the model. When
+  adding stories with cross-file imports, place the dependency's file
+  earlier in the script's `$Order`.
 
 ## References
 

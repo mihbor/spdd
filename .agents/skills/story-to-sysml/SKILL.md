@@ -86,11 +86,11 @@ metadata:
 
 - `sysml/system/` mirrors the implementation (package per area, sourced
   with date; tracks code, never constrains it). Story packages import
-  system packages, never the reverse. Order system files first for the
-  Pilot (it resolves imports incrementally).
+  system packages, never the reverse. Order system files first for
+  `validate-sysml` (it resolves imports incrementally).
 - A satisfy whose witness is system-typed against a scaffolding-typed
-  subject is the seam made visible: spec42 stays clean, the Pilot warns
-  `Bound features should have conforming types`. Expected — do not
+  subject is the seam made visible: spec42 stays clean,
+  `validate-sysml` warns `Bound features should have conforming types`. Expected — do not
   "fix" by retyping; the warning marks where requirement meets code.
 
 ## Standing caveats
