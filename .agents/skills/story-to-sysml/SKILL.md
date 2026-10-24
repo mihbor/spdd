@@ -26,9 +26,11 @@ metadata:
   in the story, the story is code-shaped — fix the story, do not encode it.
 - Name attributes so `owningPart.attribute` is self-describing; never
   transcribe AC verbs into bare booleans. Avoid reserved keywords as
-  names entirely (`state`, `transition` fail with
-  `reserved_declaration_name` — use `game`, `turnTransition`); the
-  error lists the keyword, not the fix.
+  names entirely (`state`, `transition`, `view`, `case` fail with
+  `reserved_declaration_name` — use `game`, `turnTransition`, `sight`,
+  `situation`); the error lists the keyword, not the fix. Cross-file
+  requirement references must match the def name exactly — the validator
+  reports the use site, so check the defining file first.
 - Every approximated constraint gets a doc note: what was lost in
   formalization and where enforcement really lives (test, future `verify`).
 - A constraint earns its place only if you can imagine it failing.
