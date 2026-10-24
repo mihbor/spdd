@@ -30,8 +30,10 @@ metadata:
   with `reserved_declaration_name` — use `game`, `turnTransition`,
   `sight`, `situation`, `grant`); the error lists the keyword, not the
   fix. Cross-file requirement references must match the def name
-  exactly — the validator reports the use site, so check the defining
-  file first.
+  exactly — the validator reports the use site, so diff the use against
+  the definition character by character; one-letter differences
+  (singular/plural, e.g. `AddUp`/`AddsUp`, `Prereq`/`Prereqs`) are the
+  usual cause and survive every re-read except a direct diff.
 - Every approximated constraint gets a doc note: what was lost in
   formalization and where enforcement really lives (test, future `verify`).
 - A constraint earns its place only if you can imagine it failing.
