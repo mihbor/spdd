@@ -39,6 +39,11 @@ metadata:
   empty part defs validate clean.
 - Numbers: story numbers verbatim; invented or story-defined values marked
   as such; derivations shown step by step in plain language, no jargon.
+- Story examples pin as spot-checks, never as the whole table: mark which
+  examples are pinned and name the authoritative source (goods.txt,
+  terrain.txt, BtS table) for exhaustive conformance, which belongs in
+  the test that reads that source. Precedent: `Story-003-003` AC2/AC7,
+  `Story-003-004` AC5.
 - Check expressibility before assuming it: the stdlib has no `pow`, so
   exponential formulas stay as pinned rows rather than calcs.
 
