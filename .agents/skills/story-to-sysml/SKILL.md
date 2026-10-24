@@ -64,6 +64,8 @@ metadata:
 
 ## Standing caveats
 
+- After any story edit, grep `sysml/` for the story ID: doc quotes go
+  stale and pinned values can drift from amended numbers. Re-validate.
 - Validation is not a quality gate: a green check can still encode a bad
   requirement. Requirement quality (business language, no prescribed
   identifiers) is reviewed by hand.
