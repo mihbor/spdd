@@ -38,7 +38,7 @@ spec42 --version
    validating a single file inside a multi-file project.
 
     ```powershell
-    spec42 check sysml/Story-001-001.sysml
+    spec42 check sysml/requirements/Story-001-001.sysml
     spec42 check sysml --workspace-root sysml --format json
     ```
 
@@ -58,7 +58,7 @@ spec42 --version
    `projection.truncation` reports what was cut.
 
     ```powershell
-    spec42 model-export sysml/Story-001-001.sysml --max-nodes 500 --format json
+    spec42 model-export sysml/requirements/Story-001-001.sysml --max-nodes 500 --format json
     ```
 
 Global flags: `--library-path`, `--config`, `--stdlib-path`,

@@ -12,7 +12,7 @@ metadata:
 
 ## Setup
 
-- One file per story: `sysml/Story-<module>-<seq>.sysml`, one package per
+- One file per story: `sysml/requirements/Story-<module>-<seq>.sysml`, one package per
   file (`PlanetCivEpic<NN><Topic>`). Never repeat a package name across
   files — spec42 does not merge them.
 - `private import ScalarValues::*;` always; add stdlib imports
@@ -81,6 +81,17 @@ metadata:
   <MMM-SSS>` lists every satisfy link touching a story (requirement,
   satisfying element, owning files). Built on `model-export`
   `satisfySource`/`satisfyTarget` peers — the graph's first reader.
+
+## System seam
+
+- `sysml/system/` mirrors the implementation (package per area, sourced
+  with date; tracks code, never constrains it). Story packages import
+  system packages, never the reverse. Order system files first for the
+  Pilot (it resolves imports incrementally).
+- A satisfy whose witness is system-typed against a scaffolding-typed
+  subject is the seam made visible: spec42 stays clean, the Pilot warns
+  `Bound features should have conforming types`. Expected — do not
+  "fix" by retyping; the warning marks where requirement meets code.
 
 ## Standing caveats
 
