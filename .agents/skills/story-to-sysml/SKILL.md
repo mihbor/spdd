@@ -22,6 +22,10 @@ metadata:
 
 - Doc blocks carry Given/When/Then verbatim (SPDD rule 1: preserve business
   requirements). Anything else is labeled derivation-not-story-text.
+- `doc /* ... */` takes no trailing semicolon: the grammar's Documentation
+  body is the comment token itself, so `*/;` is a stray `;` and Pilot fails
+  with `no viable alternative at input ';'` (cascading into `require`/
+  brace errors). spec42 accepts it, so only validate-sysml catches this.
 - Suspicious ease is a story defect. If attributes map 1:1 from identifiers
   in the story, the story is code-shaped — fix the story, do not encode it.
 - Name attributes so `owningPart.attribute` is self-describing; never
@@ -42,11 +46,20 @@ metadata:
   counts, pins, machines, and links carry constraints. Prune attributes
   orphaned by dropped constraints. Both subject-without-constraint and
   empty part defs validate clean.
+- The model carries requirement content, never process history: no canvas
+  rounds, review findings, story-correction recounts, or corroboration
+  counts. Provenance lives in the story and SPDD artifacts.
+- Requirements model sources only from the stories (and their upstream epic
+  text). REASONS canvases, prompts, analysis notes, and code are downstream:
+  their decisions never become requirement defs directly. If a downstream
+  artifact exposes a requirement ambiguity, amend the story with provenance
+  first, then model the amended story; design-only choices stay in the
+  canvas and, once implemented, the system model.
 - Story defects get fixed by corroboration count, not hunch: grep the
   corpus for the number, weigh witnesses, prefer the side citing a source
   file (CtP2 reference, decisions.md), fix toward it, and record the
-  provenance in both the story and the model doc. Precedent: the +3/+30
-  Scientist output (5 witnesses vs 1).
+  provenance in the story; the model states the corrected requirement
+  only. Precedent: the +3/+30 Scientist output (5 witnesses vs 1).
 - A satisfy witness may be imported: the link lives in the dependent's
   package, but the usage it binds can come from another file's package
   (e.g. radius visibility satisfied by a growth-package usage).
