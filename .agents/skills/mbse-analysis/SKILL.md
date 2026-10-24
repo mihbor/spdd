@@ -1,0 +1,413 @@
+---
+name: mbse-analysis
+description: MBSE/SysML-integrated variant of spdd-analysis — strategic analysis plus a requirements-model review that feeds findings into the analysis and REASONS Canvas
+---
+
+Analyze a business requirement document against the current codebase and, when a SysML requirements model exists, against that model, producing a **strategic-level** enriched context that combines business information, domain concept identification, high-level approach decisions, and risk analysis — serving as high-quality input for `/mbse-reasons-canvas`. This phase focuses on the "What" and "Why", leaving the "How" to the REASONS Canvas phase.
+
+**Variant note**: this is the MBSE/SysML-integrated copy of `spdd-analysis`. It keeps the canonical lifecycle and adds the requirements-model review described in Step 2g and Step 5f. The canonical `spdd-analysis` remains unchanged; use this variant when a model exists or is being introduced.
+
+**Input**: The argument after `/mbse-analysis` is a business requirement description or file reference.
+
+Input can be provided in two ways:
+
+1. **Text description**: Direct text describing the requirement
+2. **File/folder reference**: Using `@` to reference files or folders containing requirements
+
+An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/STORY-001-001-202607241944-Analysis-....md`); in that case that file is the update target.
+
+**Update vs. create (default: in-place update)**: When the business input maps to a story or ticket identifier that already has one or more files in `spdd/analysis/`, DEFAULT to updating the latest matching file in place (overwrite, preserve filename). Only create a new timestamped analysis file when (a) no matching analysis exists, or (b) the user explicitly asks for a new analysis (e.g. "create new analysis", "new file", "keep history").
+
+**Examples**:
+
+```
+# File reference (updates existing analysis in place when one matches, else creates)
+/mbse-analysis @requirements/token-usage-billing-story.md
+
+# Text description
+/mbse-analysis Implement monthly billing summary report for customers with usage breakdown
+
+# Combined
+/mbse-analysis @requirements/billing-report.md additionally needs CSV export support
+
+# Force a new file even when a match exists
+/mbse-analysis @requirements/billing-report.md --new-analysis
+
+# Update a specific analysis file explicitly
+/mbse-analysis @spdd/analysis/STORY-001-001-202607241944-Analysis-monthly-report-export.md reflect the amended ACs in @requirements/billing-report.md
+```
+
+**Steps**
+
+1. **Validate and consolidate business input**
+
+   a. **If no input provided**, use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
+   > "Please provide the business requirement document or description (you can use text, @file references, or both)."
+
+   **IMPORTANT**: Do NOT proceed without business input.
+
+   b. **If input contains `@` file/folder references**:
+    - Read ALL referenced files completely using the Read tool
+    - For folder references, read all relevant files within the folder
+    - Consolidate all file contents into a unified business context
+
+   c. **Combine all context sources**:
+    - Merge text descriptions with file contents
+    - Preserve the complete information from all sources — do NOT summarize or truncate
+
+   d. **Context Integrity Check**:
+    - Verify all `@` references were successfully read
+    - If any file cannot be read, report the error and ask user to provide alternative
+    - Confirm the consolidated context contains sufficient information to proceed
+
+   e. **Resolve update vs. create mode (default: update in place)**:
+    - Extract the story/ticket identifier from the business input when available (same priority as Step 7: story number first, then explicit ticket, else no identifier).
+    - If the input explicitly references an `@spdd/analysis/<file>.md`, that file is the update target — read it completely.
+    - Otherwise list files in `spdd/analysis/` matching the identifier. When at least one match exists AND the user has not explicitly asked for a new analysis, select the latest matching file (by timestamp in the filename) as the update target and read it completely.
+    - Create a new file only when no match exists or the user explicitly asked for a new analysis. Record the resolved mode (update + target path, or create) and use it in Step 7.
+
+2. **Concept-driven codebase exploration**
+
+   Do NOT exhaustively read the entire codebase — this does not scale. Instead, use a **concept-driven** approach: first build a lightweight project fingerprint, then extract search concepts from the business requirement, and finally explore only the relevant parts of the codebase in depth.
+
+   a. **Project fingerprint (lightweight bootstrap — always do first)**:
+    - Read the **primary** build/dependency file (ONE file: e.g., `build.gradle`, `pom.xml`, `package.json`, `requirements.txt`, `go.mod`) to detect the tech stack, framework, and key dependencies
+    - List the top-level directory structure (directory names only, not file contents) to understand the project layout and layering conventions
+    - Read the **main** configuration file (e.g., `application.yml`, `.env`, `next.config.js`) to understand infrastructure choices (DB, caching, messaging, etc.)
+    - This step should be fast and touch only 2–3 files
+
+   b. **Extract search concepts from business input**:
+   Before touching any domain code, analyze the business requirement from Step 1 to extract:
+    - **Domain nouns**: entity/concept names that likely map to code (e.g., "customer", "bill", "pricing plan", "subscription", "quota")
+    - **Action verbs**: operations that likely map to endpoints or services (e.g., "submit usage", "calculate bill")
+    - **API surfaces**: explicit paths, event names, or queue names mentioned (e.g., `POST /api/usage`)
+    - **Technical hints**: mentioned technologies, patterns, or domain-specific terms (e.g., "monthly reset", "overage rate", "token")
+
+   These extracted concepts become the **search scope** for all subsequent exploration.
+
+   c. **Targeted schema exploration (scoped by concepts)**:
+    - Search migration/schema files for tables whose names match the extracted domain nouns — do NOT read all migrations
+    - Read ONLY the matched migrations or schema definitions
+    - Follow foreign key relationships **one hop outward** from matched tables to capture boundary context (e.g., if `bills` references `customers`, read the `customers` table definition too)
+    - If using an ORM, search for entity/model classes matching the same concept names
+
+   d. **Targeted code exploration (scoped by concepts)**:
+    - Search file names and class names for matches against the extracted concepts (e.g., `*Customer*`, `*Bill*`, `*Usage*`, `*Quota*`)
+    - Read matched files to understand existing business logic, validation, and error handling
+    - Follow direct code dependencies **one hop** (e.g., if `BillService` injects `SubscriptionRepository`, read that too — but don't keep chaining)
+    - From the matched files, observe architecture conventions in use (naming, layering, error format, validation style, test patterns)
+    - If no matching domain code exists (greenfield area), note this explicitly and rely on framework conventions inferred from dependencies
+
+   e. **Relevant SPDD context (scoped by concepts)**:
+    - List files in `spdd/prompt/` and `spdd/analysis/` (if the directories exist)
+    - Read ONLY those files whose filenames suggest relevance to the extracted concepts
+    - In update mode, the target analysis file from Step 1e is already read and serves as the patch base — do not treat it as mere background
+    - If none are relevant or the directories are absent, skip this step
+
+   f. **Controlled expansion (one additional hop only)**:
+    - If during steps 2c–2e you discover a concept that is clearly essential to the requirement but was NOT in the initial extraction (e.g., an unexpected foreign key, a shared utility), add it to the concept list and do **one more** targeted search for it
+    - Do NOT recursively expand beyond this single additional hop — stop and note the boundary
+
+   g. **Requirements model review (MBSE variant, when a model exists)**:
+    - Locate `sysml/requirements/Story-<EPIC>-<STORY>.sysml` matching the story identifier. If absent, record "no requirements model" and skip; absence is not a finding and must not block analysis.
+    - Gate the model before trusting it: run `spec42 check "sysml" --workspace-root "sysml"` and `powershell -File tools/validate-sysml.ps1` (repo tooling). If either fails, report the failure and do not draw findings from the broken model.
+    - Review the model as requirements evidence, not as a design:
+      - AC coverage: every story AC has a requirement def and a `satisfy` link, or a documented reason it is doc-only.
+      - Story grounding: constraints and values trace to the story text; flag any model-only rule the story does not state (D-024).
+      - Falsifiability: constraints can fail and are not tautologies; pinned arithmetic is checkable.
+      - Consistency: numbers in the model match the story; cross-story dependencies (`powershell -File tools/sysml-dependents.ps1 -Story <EPIC>-<STORY>`) do not contradict the story.
+      - Expressiveness gaps: behavior the model cannot express (eligibility, ordering, refusal) recorded as candidate findings, not assumed away.
+    - Findings are evidence for Step 5, not new scope: never edit the story or the model in this phase.
+
+   **IMPORTANT**: Be targeted — explore deeply within the relevant scope, not broadly across the entire codebase. Read actual file contents for the scoped concepts; do not guess. If the scope turns out to be very large (e.g., the requirement touches 10+ existing modules), explicitly list all identified concepts and prioritize the core ones, noting the peripheral ones as "boundary context" to be verified during REASONS Canvas.
+
+3. **Domain Concept Identification**
+
+   Identify the business concepts involved at a **conceptual level** — do NOT drill into specific attributes, data types, method signatures, or DTOs. The goal is to understand the domain landscape, not to design the implementation.
+
+   a. **Concept inventory**:
+    - What core business concepts does this requirement involve?
+    - Which already exist in the codebase (as DB tables, existing classes, or type definitions)?
+    - Which are new and need to be introduced?
+
+   b. **Conceptual relationships**:
+    - How do these concepts relate to each other at a business level?
+    - What are the ownership and lifecycle boundaries?
+
+   c. **Key business rules**:
+    - What invariants must be maintained?
+    - What business rules are explicit in the requirement?
+    - What business rules are **implicit** and need to be surfaced?
+
+   Output this section as:
+
+   ```
+   ### Domain Concept Identification
+
+   #### Existing Concepts (from codebase)
+   - [ConceptName]: [business purpose] — [relationship to other concepts]
+
+   #### New Concepts Required
+   - [ConceptName]: [business purpose] — [how it relates to existing concepts]
+
+   #### Key Business Rules
+   - [Rule]: [which concepts it governs]
+   ```
+
+4. **Strategic Approach & Trade-offs**
+
+   Determine the **high-level solution direction** — do NOT specify implementation details like specific queries, annotations, JSON shapes, method signatures, or step-by-step logic. Those belong in the REASONS Canvas phase.
+
+   a. **Solution direction**:
+    - What is the overall approach to solving this requirement?
+    - Which existing architectural patterns and conventions should be leveraged?
+    - What is the general data flow direction (e.g., "REST endpoint → service-layer calculation → persist result")?
+
+   b. **Key design decisions**:
+    - What strategic choices need to be made?
+    - What are the trade-offs for each choice?
+    - What is the recommended direction and why?
+
+   c. **Alternatives considered** (if applicable):
+    - What other approaches were considered?
+    - Why were they rejected?
+
+   Output this section as:
+
+   ```
+   ### Strategic Approach
+
+   #### Solution Direction
+   - [High-level description of approach]
+
+   #### Key Design Decisions
+   - [Decision]: [trade-offs] → [recommendation and rationale]
+
+   #### Alternatives Considered
+   - [Alternative]: [why rejected]
+   ```
+
+5. **Risk & Gap Analysis**
+
+   Surface everything that could cause problems or needs clarification **before** detailed design begins in the REASONS Canvas phase.
+
+   a. **Requirement ambiguities**:
+    - What is unclear, underspecified, or open to interpretation in the requirement?
+    - What implicit assumptions has the requirement made?
+
+   b. **Edge cases**:
+    - What scenarios are not explicitly addressed by the requirement or ACs?
+    - What boundary conditions need clarification?
+
+   c. **Technical risks**:
+    - What technical challenges or constraints could impact the implementation?
+    - Are there concurrency, performance, or data integrity concerns?
+
+   d. **Acceptance Criteria coverage**:
+    - Are all ACs addressable with the proposed approach?
+    - Are there gaps between the ACs and the full scope of the requirement?
+
+   e. **Deferred scope resolution**:
+
+   If during analysis you identify a requirement that **is in scope** of the story (part of the acceptance criteria or explicitly described scope) but should be **deferred** to a later story or milestone:
+
+    - **MUST consult the user** using the AskUserQuestion tool before marking it as deferred. Present the item, explain why deferral is being considered, and ask for their decision.
+    - **If the user agrees to defer**: Append the item to `spdd/analysis/deferred.md` (create the file if it doesn't exist). Use the format below. Each entry must include the story identifier, the deferred item, and the rationale.
+    - **If the user does not agree**: Keep the requirement in scope for the current analysis and document it as an AC that must be addressed.
+
+   Once a deferred item has been addressed, it MUST be **removed** from `spdd/analysis/deferred.md` — do not leave it in place with an updated status. The file tracks items that are still pending; resolved items no longer belong there. Removal is a three-step procedure, all three steps mandatory:
+     1. Delete the item's table row entirely — no strike-through, no "resolved"/"superseded" status flip, no explanatory remnant.
+     2. Update the counts to match: decrement the story's per-story count and the file's total. A totals mismatch is itself a defect.
+     3. Update or delete any summary-section references to the item (blocker lists, dependency chains, counts tables) so no dangling pointer remains.
+     "Addressed" covers every resolution path: implemented in code, superseded by a decision, rewritten out of the requirements, or otherwise settled. The history of the item lives in git, not in the ledger.
+
+   Deferred entries MUST use this format:
+
+    ```markdown
+    ## STORY-XXX-XXX: Story Title
+
+    | Deferred Item | Rationale |
+    |---|---|
+    | **[Item description]** — brief context. | Why it was deferred — dependency, performance, scope control, etc. |
+    ```
+
+   **IMPORTANT**: This step only applies to items that are **in scope** of the story being analyzed. Items that were explicitly "Out of scope" from the start, covered in another story, rejected alternatives, or pure design decisions must NOT be added to `deferred.md`.
+
+   f. **Model review findings (MBSE variant)**:
+    - If Step 2g found a requirements model, convert its findings into the `#### Model Review (YYYY-MM-DD)` table below. Do not prescribe the story edit here; name the ambiguity and its acceptance impact.
+    - Type: `AC gap`, `ambiguity`, `inconsistency`, or `edge case`. Recommendation: `story amendment candidate` (resolved downstream with user consent), `implementation decision`, or `defer` (requires the Step 5e consent flow).
+    - If no model was reviewed, omit the subsection entirely.
+
+   Include the `#### Deferred Scope` subsection and its table **only if** at least one in-scope requirement was explicitly deferred with user consent. If there are no such deferred items, omit both the subsection and the table entirely; do not create an empty table or add a `None` row.
+
+   Output the always-required parts of this section as:
+
+    ```markdown
+    ### Risk & Gap Analysis
+
+    #### Requirement Ambiguities
+    - [Ambiguity]: [what needs clarification]
+
+    #### Edge Cases
+    - [Scenario]: [why it matters]
+
+    #### Technical Risks
+    - [Risk]: [potential impact and mitigation direction]
+
+    #### Acceptance Criteria Coverage
+   | AC# | Description | Addressable? | Gaps/Notes |
+   |-----|-------------|--------------|------------|
+   | [n] | [AC text]   | Yes/Partial  | [any gaps]  |
+   ```
+
+   When a requirements model was reviewed, append this subsection after the AC coverage table:
+
+    ```markdown
+    #### Model Review (YYYY-MM-DD)
+    | Finding | Model anchor | Type | Recommendation |
+    |---------|--------------|------|----------------|
+    | [what the model exposes] | [requirement def / part usage] | [AC gap / ambiguity / inconsistency / edge case] | [story amendment candidate / implementation decision / defer] |
+    ```
+
+   If at least one in-scope requirement was explicitly deferred with user consent, append this subsection:
+
+    ```markdown
+    #### Deferred Scope
+    | Item | Rationale | User Consented? |
+    |------|-----------|-----------------|
+    | [Deferred item] | [Rationale] | Yes |
+    ```
+
+6. **Assemble the enriched context document**
+
+   Combine all analysis results into a single, structured document:
+
+   ```markdown
+   # SPDD Analysis: [Derived Title]
+
+   ## Original Business Requirement
+   [Complete original requirement text — unmodified]
+
+   ## Domain Concept Identification
+   [Output from Step 3]
+
+   ## Strategic Approach
+   [Output from Step 4]
+
+   ## Risk & Gap Analysis
+   [Output from Step 5]
+   ```
+
+   **NOTE**: The codebase exploration from Step 2 is a **working process** — its findings are internalized and reflected through the Domain Concept Identification (which references existing vs. new concepts), Strategic Approach (which references existing patterns and conventions), and Risk & Gap Analysis (which surfaces technical constraints). Do NOT output a separate "Codebase Context Summary" section.
+
+   **IMPORTANT**:
+    - The original business requirement MUST be included verbatim — do NOT paraphrase
+    - Every section must contain concrete, specific content — no placeholders
+    - All analysis must be grounded in actual codebase exploration, not assumptions
+    - Stay at a **conceptual/strategic** level — do NOT include implementation details (specific queries, JSON shapes, method signatures, annotations, component inventories). Those belong in the REASONS Canvas phase.
+
+ 7. **Save the enriched context document (default: update in place)**
+
+   Use the mode resolved in Step 1e.
+
+   a. **Update mode (default when a matching analysis exists)**:
+    - Overwrite the target file resolved in Step 1e — preserve its filename (do NOT rename, do NOT add a new timestamp).
+    - Refresh the `## Original Business Requirement` block with the current business input verbatim.
+    - Patch only the sections affected by the change (concepts, decisions, risks, AC-coverage rows); preserve unaffected content and intent.
+    - Re-verify AC coverage for EVERY AC (old and new) and keep cross-section consistency.
+    - Ensure directory `spdd/analysis/` exists (create if not), then write the complete document back to the same path.
+
+   b. **Create mode (no match, or user explicitly asked for a new analysis)**:
+    - **Derive file name**: `{IDENTIFIER}-{TIMESTAMP}-Analysis-{description}.md`
+     - **IDENTIFIER priority 1 — story number**: Extract the story number or story identifier from the referenced filename, document heading, or business context when available (for example, `STORY-001-001`). Preserve the established story-number format.
+     - **IDENTIFIER priority 2 — work-management ticket**: If no story number is available, extract an explicit ticket or reference number from whatever work-management system is named in the business context (for example, `PROJ-123`). Do not assume a particular work-management system or invent an identifier.
+     - **IDENTIFIER fallback**: If neither a story number nor a ticket number can be extracted, use `analysis`.
+     - **TIMESTAMP**: `YYYYMMDDHHmm` (current time)
+     - **description**: Derive from business context — kebab-case, < 10 words
+
+    Examples:
+     - `STORY-001-001-202607241944-Analysis-octasphere-tile-adjacency.md`
+     - `PROJ-123-202607241944-Analysis-monthly-report-export.md`
+     - `analysis-202607241944-Analysis-greenfield-domain-model.md`
+
+    - **Create directory and write file**:
+     - Ensure directory `spdd/analysis/` exists under the project root (create if not)
+     - Write the complete enriched context document to `spdd/analysis/<file-name>.md`
+
+   c. **Show summary to user**:
+
+   ```
+   ✅ Analysis complete. Enriched context saved to `spdd/analysis/<file-name>.md` (updated in place | created new)
+
+
+   📋 Analysis summary:
+   - Analysis identifier: [story number, ticket number, or `analysis` fallback]
+   - Project type: [backend/frontend/fullstack]
+   - Existing concepts identified: [count]
+   - New concepts required: [count]
+   - Key design decisions: [count]
+   - Acceptance Criteria coverage: [count]/[total]
+   - Open questions/risks: [count]
+   - Requirements model: [reviewed — N findings | not present]
+
+   🔗 Next step: Use this as input for REASONS Canvas generation:
+      /mbse-reasons-canvas @spdd/analysis/<file-name>.md
+   ```
+
+8. **Offer to proceed with REASONS Canvas generation**
+
+   > "The enriched context is ready. Would you like me to proceed with `/mbse-reasons-canvas` using this analysis as input?"
+
+   If the user confirms, invoke the `/mbse-reasons-canvas` workflow with the saved analysis file as input.
+
+**Output**
+
+An enriched context document saved to `spdd/analysis/<file-name>.md` (updated in place by default; newly created only when no match exists or explicitly requested) that transforms raw business requirements into a **strategic-level** analysis containing:
+- Original business requirements (preserved verbatim, refreshed on update)
+- Domain concept identification (existing and new concepts, conceptual relationships, business rules — grounded in codebase exploration)
+- Strategic approach (solution direction, key design decisions, trade-offs, alternatives considered)
+- Risk & gap analysis (ambiguities, edge cases, technical risks, AC coverage assessment)
+
+**Guardrails**
+
+- DEFAULT to in-place update when a matching analysis file exists; create a new timestamped file only when no match exists or the user explicitly asks for a new analysis
+- In update mode, do NOT rename the file — preserve the original filename; only the file contents change
+- In update mode, apply the minimal-change principle: patch only affected sections, preserve unaffected content and original design intent, and re-verify full AC coverage
+- Do NOT proceed without business requirement input
+- Do NOT skip codebase exploration — analysis MUST be grounded in actual codebase state
+- Do NOT exhaustively read the entire codebase — use concept-driven scoping from the business requirement to target only relevant areas
+- Do NOT summarize or truncate the original business requirement — preserve it verbatim
+- Do NOT make assumptions about codebase structure without reading actual files
+- Do NOT hardcode stack-specific terminology — always detect the project type first and adapt language to the discovered stack
+- Do NOT generate code — this command produces analysis only
+- Do NOT edit the story or the `sysml/` requirements model in this phase; model findings are recorded in the analysis and resolved downstream
+- Run both model gates before drawing findings from `sysml/`; a failing model is a blocker to report, never evidence
+- Do NOT let model content introduce requirements the story does not state (D-024); flag it as an inconsistency instead
+- Do NOT include implementation-level details (specific queries, JSON shapes, method signatures, annotations, component-layer inventories, step-by-step logic) — those belong in `/mbse-reasons-canvas`
+- Do NOT leave placeholders or TODO items — generate complete, specific content
+- Do NOT modify application/source files or unrelated existing files. The only permitted writes are the updated-or-generated analysis document and, after explicit user consent, the deferred-scope ledger described in Step 5.
+- Always read ALL `@` referenced files completely (including the update-target analysis file in update mode)
+- Always create `spdd/analysis/` directory if it does not exist
+- In create mode, file name MUST start with the extracted story number or explicit work-management ticket when either is available; otherwise use the `analysis` fallback
+- Do not assume a particular work-management system when extracting ticket numbers
+- Acceptance Criteria coverage MUST assess every AC from the requirement
+- Risk & Gap Analysis MUST surface any ambiguities — do NOT silently assume
+- Deferred scope MUST be explicitly approved by the user via AskUserQuestion before being accepted
+- Include the `Deferred Scope` subsection and table only when at least one in-scope requirement was explicitly deferred with user consent; otherwise omit both and never emit an empty table or a `None` row
+- Any in-scope requirement deferred with user consent MUST be recorded in `spdd/analysis/deferred.md` (creating the file if needed)
+- Items that are out of scope, covered in another story, rejected alternatives, or pure design decisions MUST NOT be added to `deferred.md`
+- Resolved/deferred items that have been addressed MUST be removed from `deferred.md` — never updated in place with a "resolved" status
+- Removing a deferred item MUST delete its row, decrement the per-story count and file total, and clear any summary references to it; "addressed" includes implemented, superseded-by-decision, and rewritten-out-of-requirements
+
+**Context Integrity Guardrails**:
+
+- **MUST read ALL `@` referenced files completely** — do NOT skip or partially read any referenced file
+- **MUST read folder contents** when `@` references a folder — scan and read all relevant files
+- **Do NOT summarize or truncate** referenced file contents — preserve full information
+- **Verify all references resolved** — if any `@` reference fails to read, report error immediately
+- **Combine all sources** — merge text descriptions with file contents into unified context
+- **Preserve original intent** — do not interpret or modify the meaning of provided context
+
+**Workflow context**
+
+`/mbse-analysis` is the MBSE/SysML-integrated variant of Phase 1 of the canonical SPDD pipeline. It produces strategic, codebase- and model-grounded context in `spdd/analysis/` for `/mbse-reasons-canvas`; the shared lifecycle, artifact handoffs, and iteration rules are defined in the root `AGENTS.md`. The canonical `spdd-analysis` remains the default for stories without a requirements model.

@@ -1,0 +1,501 @@
+---
+name: mbse-reasons-canvas
+description: MBSE/SysML-integrated variant of spdd-reasons-canvas — consumes the analysis Model Review, resolves findings through the story-amendment protocol, and cites requirements-model pins
+---
+
+Generate implementation-ready structured prompts using the built-in REASONS-Canvas framework (Requirements, Entities, Approach, Structure, Operations, Norms, Safeguards).
+
+**Variant note**: this is the MBSE/SysML-integrated copy of `spdd-reasons-canvas`. It consumes the `#### Model Review` findings produced by `/mbse-analysis`, routes each through the Requirement Ambiguity Protocol, and cites in-sync requirements-model pins in the prompt. The canonical `spdd-reasons-canvas` remains unchanged.
+
+**Input**: Business context/requirement description after `/mbse-reasons-canvas`
+
+Input can be provided in two ways:
+
+1. **Text description**: Direct text describing the requirement
+2. **File/folder reference**: Using `@` to reference files or folders containing requirements
+
+**Examples**:
+
+```
+# Text description
+/mbse-reasons-canvas Implement user registration functionality, supporting email verification and mobile phone binding
+
+# File reference
+/mbse-reasons-canvas @requirements/user-registration.md
+
+# Combined (text + file reference)
+/mbse-reasons-canvas @requirements/user-registration.md additionally requires support for third-party OAuth login
+
+# Multiple file references
+/mbse-reasons-canvas @requirements/user-registration.md @docs/api-spec.yaml
+```
+
+**Workflow context**
+
+`/mbse-reasons-canvas` is the MBSE/SysML-integrated variant of Phase 2 of the canonical SPDD pipeline. It turns business context or Phase 1 analysis (including a `#### Model Review`) into the structured prompt consumed by `/spdd-generate`; the shared lifecycle, artifact handoffs, and iteration rules are defined in the root `AGENTS.md`. The canonical `spdd-reasons-canvas` remains the default for stories without a requirements model.
+
+**Steps**
+
+1. **Validate and consolidate business context**
+
+   a. **If business context is missing**, use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
+    - "Please provide the business context or requirement description (you can use text, @file references, or both)"
+
+   **IMPORTANT**: Do NOT proceed without business context input.
+
+   b. **If input contains `@` file/folder references**:
+    - Read ALL referenced files completely using the Read tool
+    - For folder references, read all relevant files within the folder (`.md`, `.txt`, `.yaml`, `.json`, etc.)
+    - Consolidate all file contents into a unified business context
+
+   c. **Combine all context sources**:
+    - Merge text descriptions with file contents
+    - Preserve the complete information from all sources
+    - Do NOT summarize or truncate - maintain full context integrity
+
+    **Context Integrity Check**:
+     - Verify all `@` references were successfully read
+     - If any file cannot be read, report the error and ask user to provide alternative
+     - Confirm the consolidated context contains sufficient information to proceed
+
+   d. **Requirements-model intake (MBSE variant)**:
+    - If the analysis input contains a `#### Model Review` subsection, read every finding and classify it before drafting:
+      - **Story amendment candidate** → run the Requirement Ambiguity Protocol (Step 4), asking the user before any story edit; after an approved amendment, re-sync `sysml/requirements/` from the story before proceeding.
+      - **Implementation decision** → resolve it in the relevant canvas section; no requirement def may be added for it.
+      - **Defer** → confirm the item is in `spdd/analysis/deferred.md`; it stays out of this canvas.
+      - **Model/story inconsistency** → the story is authoritative; mark the model stale and require a re-sync; never follow the model over the story.
+    - Do not proceed while a finding is unclassified.
+    - Locate the model package `sysml/requirements/Story-<EPIC>-<STORY>.sysml`. If present and green, cite its requirement-def names where they pin arithmetic or eligibility. If the story was amended after modeling, treat the model as stale and do not use its pins as verification oracles.
+
+2. **Read relevant codebase context**
+    - Search for related existing implementations
+    - Read relevant entity classes, services, controllers
+    - Understand current architecture patterns
+    - Identify existing data structures and APIs
+
+3. **Apply the REASONS-Canvas Framework**
+
+   Generate fully-populated content for each of the 7 stages using the built-in construction guidance:
+
+   ***
+
+   ### R - Requirements
+
+   **Objective**: Extract core problem essence and fundamental goals
+
+   **Output Format**:
+
+   ```
+   ## Requirements
+   [Use concise verb phrases to describe the essence of requirements]
+   ```
+
+   **Construction Guidance**:
+    - **Essence Extraction**: Abstract what fundamental problem to solve and what value to create for whom
+    - **Boundary Definition**: Clarify the applicable scope and limitations
+    - **Value Focus**: Highlight business value and user benefits
+    - **Use Verb Phrases**: "Implement...", "Create...", "Design..."
+    - **Avoid Feature Stacking**: Don't list specific functions, abstract essential problems
+
+   **Quality Standards**:
+    - Core requirements summarizable in one sentence
+    - Reflect business value rather than technical implementation
+    - Clear problem boundaries and constraints
+
+   ***
+
+   ### E - Entities
+
+   **Objective**: Build clear business entity relationship models
+
+   **Output Format**:
+
+   ````
+   ## Entities
+   ```mermaid
+   classDiagram
+   direction TB
+
+   class [CoreEntity] {
+       +[AttributeType] [attributeName]
+       +[Method]()
+   }
+
+   class [RelatedEntity] {
+       +[AttributeType] [attributeName]
+   }
+
+   class [RequestDTO] {
+       +[AttributeType] [attributeName]
+   }
+
+   class [ResponseDTO] {
+       +[AttributeType] [attributeName]
+   }
+
+   [CoreEntity] "[cardinality]" -- "[cardinality]" [RelatedEntity] : [relationshipDesc]
+   [RequestDTO] --> [CoreEntity] : creates
+   [CoreEntity] --> [ResponseDTO] : maps to
+   ```
+   ````
+
+   **Construction Guidance**:
+    - **Entity Identification**: Identify core business entities, supporting entities, DTO objects
+    - **Attribute Modeling**: Define key attributes using "type+name" format
+    - **Relationship Modeling**: Clarify relationship types (1:1, 1:N, N:M) and business semantics
+    - **Interface Design**: Include key methods and static factory methods
+    - **Data Flow**: Reflect complete flow of request→processing→response
+
+   **Conservative Constraints** (CRITICAL):
+    - **Prohibit Unnecessary Refactoring**: If existing simple data types (like `List<String>`) can meet requirements, strictly prohibit creating complex entity wrappers
+    - **Existing Implementation Priority**: If current data structures can meet requirements, existing implementation must remain unchanged
+    - **Function-Driven Changes**: Only consider structural adjustments when clear functional requirements cannot be implemented through existing structures
+    - **Gradual Improvement**: Prioritize extending based on existing structures rather than rebuilding
+    - **Backward Compatibility**: Any structural changes must ensure backward compatibility
+
+   **Quality Standards**:
+    - Focus on current task flows
+    - Clear and accurate entity relationships
+    - Maintain simplicity of existing implementations
+    - Avoid over-abstraction and unnecessary complexity
+
+   ***
+
+   ### A - Approach
+
+   **Objective**: Provide high-level solution strategies and architectural approaches
+
+   **Output Format**:
+
+   ```
+   ## Approach
+   1. [Solution Category]:
+      - [High-level strategy description]
+      - [Architecture pattern or approach]
+      - [Key design decisions and rationale]
+
+   2. [Technical Implementation]:
+      - [Framework or technology choice]
+      - [Integration pattern]
+      - [Performance and security considerations]
+      - [Error-handling strategy appropriate to the detected platform, when applicable]
+
+   3. [Business Logic]:
+      - [Core business rules]
+      - [Validation and error handling strategy]
+      - [Workflow and process design]
+   ```
+
+   **Construction Guidance**:
+    - **Categorical Organization**: Organize by solution categories relevant to the detected project (for example, presentation/API design, data processing, state management, or error handling)
+    - **Architecture Decisions**: Provide key technical architecture choices and design patterns
+    - **Best Practices**: Combine industry standards and experience summaries
+    - **Decision Rationale**: Explain why specific solutions were chosen
+    - **Risk Assessment**: Identify potential risks and response strategies
+
+   **Quality Standards**:
+    - Solutions have operability
+    - Cover key technical decisions
+    - Reflect architectural thinking
+
+   ***
+
+   ### S - Structure
+
+   **Objective**: Define technical architecture and component dependency relationships
+
+   **Output Format**:
+
+   ```
+   ## Structure
+
+   ### Inheritance Relationships
+   1. [Interface] interface defines [functionality description]
+   2. [Implementation] implements [Interface] interface
+   3. [DomainModel] extends [BaseModel] class
+   4. [DomainError] follows the project's error representation (when applicable)
+
+   ### Dependencies
+   1. [ComponentA] calls [ComponentB]
+   2. [ApplicationComponent] depends on [SupportingComponent] (when applicable)
+   3. [PresentationComponent] invokes [ApplicationComponent] (when applicable)
+
+   ### Architecture Boundaries
+   1. Presentation/API/UI Boundary: [ResponsibilityDescription]
+   2. Application/Service Boundary (when applicable): [ResponsibilityDescription]
+   3. Persistence/Integration Boundary (when applicable): [ResponsibilityDescription]
+   4. Error-Handling Boundary (when applicable): [ResponsibilityDescription]
+   ```
+
+   **Construction Guidance**:
+    - **Inheritance System**: Clarify inheritance relationships of interfaces, abstract classes, and implementation classes
+    - **Dependency Chain**: Define call and dependency relationships between components
+    - **Layered Design**: Reflect the boundaries actually used by the detected project; do not invent Controller, Service, Repository, or DAO layers when they do not apply
+    - **Responsibility Separation**: Responsibility boundaries and interaction interfaces of each layer
+    - **Extension Interfaces**: Interfaces and extension points for future functionality expansion
+
+   **Quality Standards**:
+    - Clear architectural hierarchy
+    - Reasonable dependency relationships
+    - Support system extension
+
+   ***
+
+   ### O - Operations
+
+   **Objective**: Transform abstract solutions into specific executable implementation tasks
+
+   **Output Format**:
+
+   ```
+   ## Operations
+
+   ### Create/Update [ComponentType] - [ComponentName]
+   1. Responsibility: [Clear responsibility description]
+   2. Attributes:
+      - [attributeName]: [Type] - [Description]
+   3. Methods:
+      - [methodName]([parameters]): [ReturnType]
+        - Logic:
+          - [Step-by-step implementation logic]
+          - [Conditional logic and edge cases]
+          - [Error handling approach]
+   4. Framework Metadata or Annotations (when applicable): [Required metadata]
+   5. Constraints: [Validation rules and business constraints]
+
+   ### Implement [ApplicationComponentType] - [ComponentName]
+   1. Public Contract (when applicable): [Interface methods and contracts]
+   2. Core Behavior: [operation]([inputs]): [Output]
+      - Input Validation: [Input validation rules]
+      - Business Logic: [Core business logic steps]
+      - Exception Handling: [Exception handling strategy]
+      - Result or State Update: [Result construction or state transition]
+   3. Dependencies: [Required dependencies or collaborators]
+   4. State or Transaction Boundary (when applicable): [Boundary definition]
+
+   ### Define Error-Handling Boundary - [ErrorHandlerName, if applicable]
+   1. Responsibility: Handle expected failures at the appropriate application, API, or UI boundary
+   2. Error Types:
+      - [Domain or business error]: [User-visible behavior]
+      - [Validation error]: [User-visible behavior]
+      - [Unexpected error]: [Safe fallback behavior]
+   3. Handling Contracts:
+      - [Error or exception type]: [Handling or presentation contract]
+   4. Framework Integration: [Platform-appropriate mechanism, if applicable]
+   5. Response or Presentation Rules: [Consistent user-visible error behavior]
+
+   ### Define Domain Error - [ErrorType, if applicable]
+   1. Purpose: [Business or technical failure represented by this error]
+   2. Data or Attributes: [Information needed to present or handle the error]
+   3. Construction or Representation: [Platform-appropriate representation]
+   4. Usage Scenarios: [When the error is raised or displayed]
+   ```
+
+   **Construction Guidance**:
+    - **Based on First Four Stages**: Strictly based on complete context of R, E, A, S
+    - **Task Classification**: Group by functional modules or component types
+    - **Implementation Details**: Include specific code specifications, configuration requirements, business logic
+    - **Execution Order**: Organize task execution order based on dependency relationships
+    - **Single Responsibility**: Each task has clear responsibilities and boundaries
+    - **Verifiability**: Each task has clear completion criteria
+    - **Logical Rigor**: Ensure task orchestration is based on business models, avoid logical loopholes
+
+   **Quality Standards**:
+    - Tasks can be executed directly
+    - Cover complete implementation
+    - Accurate and specific details
+
+   ***
+
+   ### N - Norms
+
+   **Objective**: Define unified coding standards and common implementation patterns
+
+   **Output Format**:
+
+   ```
+   ## Norms
+   1. Framework Metadata and Annotation Standards (when applicable): [Requirements for different component types]
+   2. Dependency Management: [Dependency injection or platform-appropriate wiring patterns]
+   3. Error Handling:
+      - Define error or exception types and handling boundaries appropriate to the detected platform
+      - Keep user-visible failure behavior consistent across the relevant entry points
+      - Do not expose sensitive internal information in user-visible errors
+      - Define logging and exception tracking mechanisms appropriate to the project
+   4. Data Validation: [Common validation patterns and rules]
+   5. Logging: [Logging standards and patterns]
+   6. Documentation Standards: [Documentation and comment standards]
+   ```
+
+   **Construction Guidance**:
+    - **Standardization**: Define unified coding standards and configuration patterns
+    - **Reusability**: Extract reusable common implementation patterns
+    - **Consistency**: Ensure all components follow the same standards
+    - **Quality Assurance**: Built-in validation and verification mechanisms
+    - **Best Practices**: Reflect industry best practices
+
+   **Quality Standards**:
+    - Clear and specific standards
+    - Easy to execute and check
+    - Reflect best practices
+
+   ***
+
+   ### S - Safeguards
+
+   **Objective**: Define clear boundary conditions and quality standards
+
+   **Output Format**:
+
+   ```
+   ## Safeguards
+   1. Functional Constraints: [Functional requirements and limitations with specific criteria]
+   2. Performance Constraints: [Performance requirements with measurable metrics]
+   3. Security Constraints: [Security requirements and compliance standards]
+   4. Integration Constraints: [Integration limitations and compatibility requirements]
+   5. Business Rule Constraints: [Business rule validation with specific conditions]
+   6. Error Handling Constraints:
+      - Expected domain and validation failures must have clear user-visible outcomes
+      - Error information must not expose sensitive system internal information
+      - Errors must be handled at the appropriate application, API, or UI boundary
+   7. Technical Constraints: [Technical implementation restrictions]
+   8. Data Constraints: [Data validation rules and format requirements]
+   9. API or Boundary Constraints (when applicable): [API, UI, or integration interface standards and contracts]
+   ```
+
+   **Construction Guidance**:
+    - **Clear Boundaries**: Clearly define what can and cannot be done
+    - **Verifiability**: Constraint conditions should be verifiable
+    - **Completeness**: Cover all aspects including functionality, performance, security, integration
+    - **Practicality**: Constraints should help improve code quality and system stability
+    - **Quantified Standards**: Provide quantifiable standards and metrics whenever possible
+    - **Model traceability (MBSE variant)**: when an in-sync requirements model exists, cite the requirement-def names that pin arithmetic or eligibility in the prompt's Safeguards and add a one-line `Pinned by sysml/requirements/<file>.sysml: ...` note; never duplicate constraint bodies and never cite a stale model
+
+   **Quality Standards**:
+    - Clear constraint conditions
+    - Verifiable
+    - Complete coverage
+
+4. **Resolve requirement ambiguities before finalizing**
+
+   While drafting the canvas, classify every open decision:
+
+   a. **Implementation choice** — how to build something; behavior stays within what the story already requires. Keep it in the canvas section; no artifact upstream of the prompt changes.
+   b. **Requirement ambiguity or gap** — the observable behavior (acceptance) is underdetermined: cost basis, rounding, eligibility, refusal, ordering, or edge-case handling. The canvas must not decide this silently; treat it as a story defect and run the protocol below before saving the prompt.
+
+   For each requirement ambiguity:
+
+   a. **Record the finding in the analysis artifact first**: open the matching `spdd/analysis/*-Analysis-*.md` (match by ticket or story identifier). Add the ambiguity, the proposed interpretation, and its acceptance impact to `### Requirement Ambiguities`, or append a dated `### Canvas Resolutions (YYYY-MM-DD)` subsection naming the prompt file. After the user decides, update the same entry with the decision (story amended, or implementation-defined with rationale).
+   b. **Offer to update the story**: present the ambiguity, the proposed story edit (Scope, Business constraints, or a new or tightened AC), and its downstream effect (acceptance tests and the `sysml/requirements/` model). Ask explicitly with the AskUserQuestion tool whether to amend the story. Do NOT edit the story without explicit permission.
+   c. **If the user approves**: amend the story in its existing style without rewriting unrelated text, and add an `### Amendments` entry dated with the prompt file as provenance. Then update the affected `sysml/requirements/` package from the amended story (the requirements model sources only from stories; see the story-to-sysml skill).
+   d. **If the user declines**: record the decision and rationale in the analysis, resolve the point in the canvas as an implementation assumption, and mark it in the prompt as implementation-defined. Do not create a requirement def for it and do not present it as story-owned acceptance.
+   e. **Never invent acceptance criteria**: the canvas may choose behavior only as an implementation assumption; any behavior that acceptance tests must enforce belongs in the story first.
+
+   Complete this protocol before saving the prompt (step 6); the saved prompt must not contain requirement-level decisions that bypassed the story.
+
+5. **Construct the final structured prompt**
+
+   Create a comprehensive, ready-to-implement prompt with:
+
+   a. **Header Section**:
+
+   ```
+   # [Derived Requirement Title]
+   ```
+
+   b. **All 7 REASONS Sections - Fully Populated**:
+    - `## Requirements` - Fully populated
+    - `## Entities` - With Mermaid class diagram
+    - `## Approach` - With solution strategies
+    - `## Structure` - With architecture definition
+    - `## Operations` - With specific implementation tasks
+    - `## Norms` - With coding standards
+    - `## Safeguards` - With constraints
+
+   **DO NOT include**:
+    - Business Context section (the original requirement text)
+    - Framework metadata (Objective, Construction Guidance, Quality Standards)
+    - Generation timestamp or framework name
+
+   **ONLY include**: The structured content generated by analyzing the business context.
+
+   c. **Implementation readiness**:
+    - The final prompt should be immediately actionable
+    - All sections should be fully populated with specific details
+    - No placeholders or "TODO" items
+    - Clear, executable implementation tasks in Operations section
+
+6. **Save the fully-populated structured prompt to file**
+
+   a. **Derive file name**: `{TICKET}-{TIMESTAMP}-{ACTION}-{scope}-{description}.md`
+    - **TICKET**: Extract ticket number (e.g., `PROJ-123`, `#42`, `ABC-1`) from business context if available; otherwise use the current story number; if neither is available, use `prompt`
+    - **TIMESTAMP**: `YYYYMMDDHHmm` (current time)
+    - **ACTION**: Infer from business context - `Feat`, `Fix`, `Refactor`, `Test`, `Docs`
+    - **scope**: Infer from context - `api`, `service`, `repo`, `bq`, `db`, `util` (optional)
+    - **description**: Derive from business context - kebab-case, < 10 words
+
+   Examples:
+    - `PROJ-123-202603061530-Feat-api-user-registration.md`
+    - `42-202603061530-Fix-service-payment-validation.md`
+
+   b. **Create directory and write file**:
+    - Ensure directory `spdd/prompt/` exists under the project root (create if not)
+    - Write the complete, fully-populated structured prompt to `spdd/prompt/<file-name>.md`
+
+   c. **Show summary to user**:
+
+   ```
+   ✅ REASONS-Canvas prompt generated and saved to `spdd/prompt/<file-name>.md`
+
+   📋 Generated sections:
+   - Requirements: [1-line summary]
+   - Entities: [entity count] entities with relationships
+   - Approach: [main approach summary]
+   - Structure: [architecture pattern]
+   - Operations: [task count] implementation tasks
+   - Norms: [key standards]
+   - Safeguards: [constraint count] constraints defined
+   - Requirement ambiguities: [none | N resolved — story amended (ACs/scope) vs implementation-defined]
+   - Model traceability: [none | N pins cited from sysml/requirements/<file>.sysml]
+   ```
+
+7. **Ask for confirmation to proceed. DO NOT proceed without user confirmation!**
+
+   > "The REASONS-Canvas structured prompt is ready. Would you like me to proceed with the implementation?"
+
+   State the outcome of the model intake and requirement-ambiguity protocol: model findings resolved (story amended vs implementation-defined), or none.
+
+   If the user confirms, invoke `/spdd-generate` with the saved prompt file as input. If the user declines, stop after saving the prompt.
+
+**Output**
+
+A fully-populated, implementation-ready REASONS-Canvas structured prompt saved to `spdd/prompt/<file-name>.md`, then implementation upon user confirmation.
+
+**Guardrails**
+
+- **CRITICAL**: Do NOT just output section headers - you MUST analyze business context and generate fully-populated content for all 7 REASONS stages
+- Do NOT proceed without business context input
+- Do NOT include framework metadata (Objective, Construction Guidance, Quality Standards) in the final prompt
+- Do NOT leave placeholders or TODO items - generate complete, specific content
+- Do NOT implement code before user confirms the structured prompt
+- **Requirement ambiguity protocol is mandatory**: when the canvas must decide observable acceptance behavior, update the analysis findings and ask before amending the story; never resolve it silently in the prompt
+- **Story edits require explicit permission**: amend only after user approval, keep unrelated text intact, and record the date and prompt file under `### Amendments`
+- **No orphan requirement defs**: if the story is not amended, the decision stays implementation-defined in the prompt; do not add it to `sysml/requirements/`
+- **Model findings are intake, not scope**: classify every `#### Model Review` row before drafting; never let the model introduce requirements the story does not state
+- **Do not edit `sysml/` from this phase**: after an approved story amendment, mark the model stale and require a re-sync before generation uses its pins; the story is always authoritative
+- File name MUST follow SPDD naming convention defined above
+- If no ticket or story number can be extracted from context, use `prompt` as the filename identifier
+- Always create `spdd/prompt/` directory if it does not exist
+- Read codebase context when needed to generate accurate entity models and implementation tasks
+- Ensure all sections are logically coherent and support the business requirement
+- Operations section MUST contain specific, executable implementation tasks with detailed method signatures and logic
+- **Conservative Entity Design**: Respect existing implementations, avoid unnecessary refactoring
+
+**Context Integrity Guardrails**:
+
+- **MUST read ALL `@` referenced files completely** - do NOT skip or partially read any referenced file
+- **MUST read folder contents** when `@` references a folder - scan and read all relevant files
+- **Do NOT summarize or truncate** referenced file contents - preserve full information
+- **Verify all references resolved** - if any `@` reference fails to read, report error immediately
+- **Combine all sources** - merge text descriptions with file contents into unified context
+- **Preserve original intent** - do not interpret or modify the meaning of provided context
