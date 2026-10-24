@@ -73,7 +73,9 @@ metadata:
   stages).
 - Trace links use a requirement usage plus `by`: `requirement x : Req;`
   then `satisfy x by element;`. Cross-story links live in the dependent
-  story's package via explicit `private import OtherPackage::*;`.
+  story's package via explicit single-name imports
+  (`private import OtherPackage::UsedName;` — one line per name, no
+  cross-package wildcards). `ScalarValues::*` stays the one wildcard.
 
 ## Consumption
 
@@ -85,14 +87,22 @@ metadata:
 ## System seam
 
 - `sysml/system/` mirrors the implementation (package per area, sourced
-  with date; tracks code, never constrains it). Story packages import
-  system packages, never the reverse. Order system files first for
-  `validate-sysml` (it resolves imports incrementally).
-- A satisfy whose witness is system-typed against a scaffolding-typed
-  subject is the seam made visible: spec42 stays clean,
-  `validate-sysml` warns `Bound features should have conforming types`. Expected — do not
-  "fix" by retyping; the warning marks where requirement meets code.
-
+  with date; tracks code, never constrains it).
+- When a system element must satisfy a story requirement, do NOT bind a
+  system-typed witness to a story-typed subject (spec42 stays silent but
+  `validate-sysml` warns conforming-types and SysIDE errors). Instead
+  concretize: the system def specializes the story def
+  (`SystemGameState :> GameState`, redefining renamed attributes), and
+  the satisfy lives in the system package on the conforming witness.
+  Story packages never import system definitions.
+- Keep `$Order` in `tools/validate-sysml.ps1` topological:
+  dependency-first, which now means system files AFTER the stories
+  they concretize (not directory order).
+- Editor: use the SysIDE extension (sensmetry). The "SysML v2 Editor"
+  extension reports false `import target names several elements`
+  diagnostics on valid models (confirmed 2026-10-24: errors persisted
+  after converting all cross-package imports to explicit names, while
+  both validators pass clean) — do not chase its diagnostics.
 ## Standing caveats
 
 - After any story edit, grep `sysml/` for the story ID: doc quotes go

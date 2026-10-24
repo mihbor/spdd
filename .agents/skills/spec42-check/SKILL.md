@@ -94,7 +94,8 @@ Global flags: `--library-path`, `--config`, `--stdlib-path`,
 - Model shape: one package per story file (`PlanetCivEpic01Grid`,
   `...Culling`, ...), never the same package name in two files —
   spec42 does not merge them. Cross-story links go in the dependent
-  story's package via explicit `private import OtherPackage::*;`
+  story's package via explicit single-name imports (no cross-package
+  wildcards — see story-to-sysml).
   (e.g. LOD and Culling both satisfy grid's pinned `smallGrid`).
 - `attribute def X;` without `:> Base` is NOT flagged (negative-tested,
   zero diagnostics) — grep manually. Same for `explain-diagnostic` gaps:
