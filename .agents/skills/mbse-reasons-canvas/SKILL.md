@@ -370,6 +370,7 @@ Input can be provided in two ways:
     - **Practicality**: Constraints should help improve code quality and system stability
     - **Quantified Standards**: Provide quantifiable standards and metrics whenever possible
     - **Model traceability (MBSE variant)**: when an in-sync requirements model exists, cite the requirement-def names that pin arithmetic or eligibility in the prompt's Safeguards and add a one-line `Pinned by sysml/requirements/<file>.sysml: ...` note; never duplicate constraint bodies and never cite a stale model
+    - **Presentation contract (UI-affecting stories)**: run `powershell -File tools/validate-presentation-coverage.ps1 -Matrix` and put the relevant mutation rows in Safeguards; every affected surface names its refresh path, and verification asserts `window.__planetCivApp.getPresentationMismatches()` is empty after the action
 
    **Quality Standards**:
     - Clear constraint conditions
