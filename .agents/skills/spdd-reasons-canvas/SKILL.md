@@ -379,9 +379,27 @@ Input can be provided in two ways:
    d. **If the user declines**: record the decision and rationale in the analysis, resolve the point in the canvas as an implementation assumption, and mark it in the prompt as implementation-defined. Do not create a requirement def for it and do not present it as story-owned acceptance.
    e. **Never invent acceptance criteria**: the canvas may choose behavior only as an implementation assumption; any behavior that acceptance tests must enforce belongs in the story first.
 
-   Complete this protocol before saving the prompt (step 6); the saved prompt must not contain requirement-level decisions that bypassed the story.
+   Complete this protocol before saving the prompt (step 7); the saved prompt must not contain requirement-level decisions that bypassed the story.
 
-5. **Construct the final structured prompt**
+5. **Commit system-invariant enforcement (Phase 2)**
+
+   The analysis names the shared invariants the story can affect. If the analysis has no `System Invariant Impact` subsection, perform the assessment now and record the omission as a gap.
+
+   For each invariant:
+    - Choose the enforcement: reuse the existing seam/function, extend it, or add an explicit call in the story's new path.
+    - Name the exact enforcement point and the state or surfaces it covers.
+    - Define the unit test that proves the enforcement (a spy/mock call assertion or a pure-value assertion). If a unit test cannot observe the invariant, state why and specify the integration/browser check; that exception must be explicit.
+    - If the choice changes observable acceptance, route it through the Requirement Ambiguity Protocol (step 4); otherwise it is a design commitment.
+
+   Add a `#### System Invariant Enforcement` block to the prompt's Operations (or Safeguards when it is a constraint) with one row per invariant:
+
+    | Invariant | Enforcement point | Covers | Test |
+    |---|---|---|---|
+    | [property] | [function/call] | [state or surfaces] | [unit test name/assertion] |
+
+   Do not save a prompt with an unresolved invariant gap: resolve it, or defer it with explicit user consent and record the deferral in the analysis.
+
+6. **Construct the final structured prompt**
 
    Create a comprehensive, ready-to-implement prompt with:
 
@@ -413,7 +431,7 @@ Input can be provided in two ways:
     - No placeholders or "TODO" items
     - Clear, executable implementation tasks in Operations section
 
-6. **Save the fully-populated structured prompt to file**
+7. **Save the fully-populated structured prompt to file**
 
    a. **Derive file name**: `{TICKET}-{TIMESTAMP}-{ACTION}-{scope}-{description}.md`
     - **TICKET**: Extract ticket number (e.g., `PROJ-123`, `#42`, `ABC-1`) from business context if available; otherwise use the current story number; if neither is available, use `prompt`
@@ -444,13 +462,14 @@ Input can be provided in two ways:
    - Norms: [key standards]
    - Safeguards: [constraint count] constraints defined
    - Requirement ambiguities: [none | N resolved — story amended (ACs/scope) vs implementation-defined]
+   - System invariants: [none | N committed with unit tests | M deferred with consent]
    ```
 
-7. **Ask for confirmation to proceed. DO NOT proceed without user confirmation!**
+8. **Ask for confirmation to proceed. DO NOT proceed without user confirmation!**
 
    > "The REASONS-Canvas structured prompt is ready. Would you like me to proceed with the implementation?"
 
-   State the outcome of the requirement-ambiguity protocol: none, or the story amendments made and the analysis findings updated.
+   State the outcome of the requirement-ambiguity protocol and the system-invariant commitments: none, the story amendments made and analysis findings updated, and each invariant's enforcement row plus unit test (or approved deferral).
 
    If the user confirms, invoke `/spdd-generate` with the saved prompt file as input. If the user declines, stop after saving the prompt.
 
@@ -468,6 +487,8 @@ A fully-populated, implementation-ready REASONS-Canvas structured prompt saved t
 - **Requirement ambiguity protocol is mandatory**: when the canvas must decide observable acceptance behavior, update the analysis findings and ask before amending the story; never resolve it silently in the prompt
 - **Story edits require explicit permission**: amend only after user approval, keep unrelated text intact, and record the date and prompt file under `### Amendments`
 - **No orphan requirement defs**: if the story is not amended, the decision stays implementation-defined in the prompt; do not add it to `sysml/requirements/`
+- **Every shared invariant needs a Phase 2 row**: state the enforcement point and the unit test that proves it, or defer it with explicit user consent and record the deferral in the analysis
+- **Prefer one enforcement seam**: reuse or extend the existing seam instead of repeating refresh/validation calls at each call site
 - File name MUST follow SPDD naming convention defined above
 - If no ticket or story number can be extracted from context, use `prompt` as the filename identifier
 - Always create `spdd/prompt/` directory if it does not exist

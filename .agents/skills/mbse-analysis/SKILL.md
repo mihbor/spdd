@@ -61,10 +61,10 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
     - Confirm the consolidated context contains sufficient information to proceed
 
    e. **Resolve update vs. create mode (default: update in place)**:
-    - Extract the story/ticket identifier from the business input when available (same priority as Step 7: story number first, then explicit ticket, else no identifier).
+    - Extract the story/ticket identifier from the business input when available (same priority as Step 6: story number first, then explicit ticket, else no identifier).
     - If the input explicitly references an `@spdd/analysis/<file>.md`, that file is the update target — read it completely.
     - Otherwise list files in `spdd/analysis/` matching the identifier. When at least one match exists AND the user has not explicitly asked for a new analysis, select the latest matching file (by timestamp in the filename) as the update target and read it completely.
-    - Create a new file only when no match exists or the user explicitly asked for a new analysis. Record the resolved mode (update + target path, or create) and use it in Step 7.
+    - Create a new file only when no match exists or the user explicitly asked for a new analysis. Record the resolved mode (update + target path, or create) and use it in Step 6.
 
 2. **Concept-driven codebase exploration**
 
@@ -117,6 +117,7 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
       - Falsifiability: constraints can fail and are not tautologies; pinned arithmetic is checkable.
       - Consistency: numbers in the model match the story; cross-story dependencies (`powershell -File tools/sysml-dependents.ps1 -Story <EPIC>-<STORY>`) do not contradict the story.
       - Expressiveness gaps: behavior the model cannot express (eligibility, ordering, refusal) recorded as candidate findings, not assumed away.
+      - Invariant coverage: when the model encodes shared invariants or enforcement allocations, check that the story's affected invariants are represented and that the allocation matches the story; record gaps as findings.
     - Findings are evidence for Step 5, not new scope: never edit the story or the model in this phase.
 
    **IMPORTANT**: Be targeted — explore deeply within the relevant scope, not broadly across the entire codebase. Read actual file contents for the scoped concepts; do not guess. If the scope turns out to be very large (e.g., the requirement touches 10+ existing modules), explicitly list all identified concepts and prioritize the core ones, noting the peripheral ones as "boundary context" to be verified during REASONS Canvas.
@@ -238,6 +239,21 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
     - Type: `AC gap`, `ambiguity`, `inconsistency`, or `edge case`. Recommendation: `story amendment candidate` (resolved downstream with user consent), `implementation decision`, or `defer` (requires the Step 5e consent flow).
     - If no model was reviewed, omit the subsection entirely.
 
+   g. **System invariant impact (MBSE variant)**:
+    - Identify every shared invariant the story can affect and how it is enforced today; consult the system model when it encodes the invariant or its allocation.
+    - Cite the model element that constrains or allocates the invariant; if no system model covers it, record that absence as a risk.
+    - Do not design the enforcement here: Phase 2 commits the enforcement point and its unit test; Phase 3 proves it.
+    - Do not edit code, stories, or models in this phase.
+
+   Output the `#### System Invariant Impact` subsection (always present; use `None identified - [reason]` when nothing applies):
+
+    ```markdown
+    #### System Invariant Impact
+    | Invariant | Enforced today | Story impact | Gap / Phase 2 action |
+    |---|---|---|---|
+    | [cross-cutting property] | [file/function/process or model element] | [path or surface affected] | [reuse / extend / add call + unit test] |
+    ```
+
    Include the `#### Deferred Scope` subsection and its table **only if** at least one in-scope requirement was explicitly deferred with user consent. If there are no such deferred items, omit both the subsection and the table entirely; do not create an empty table or add a `None` row.
 
    Output the always-required parts of this section as:
@@ -267,6 +283,15 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
     | Finding | Model anchor | Type | Recommendation |
     |---------|--------------|------|----------------|
     | [what the model exposes] | [requirement def / part usage] | [AC gap / ambiguity / inconsistency / edge case] | [story amendment candidate / implementation decision / defer] |
+    ```
+
+   Then append the system invariant impact subsection (always present):
+
+    ```markdown
+    #### System Invariant Impact
+    | Invariant | Enforced today | Story impact | Gap / Phase 2 action |
+    |---|---|---|---|
+    | [cross-cutting property] | [file/function/process or model element] | [path or surface affected] | [reuse / extend / add call + unit test] |
     ```
 
    If at least one in-scope requirement was explicitly deferred with user consent, append this subsection:
@@ -348,13 +373,14 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
    - Key design decisions: [count]
    - Acceptance Criteria coverage: [count]/[total]
    - Open questions/risks: [count]
+   - System invariants: [count identified] / [count with gaps]
    - Requirements model: [reviewed — N findings | not present]
 
    🔗 Next step: Use this as input for REASONS Canvas generation:
       /mbse-reasons-canvas @spdd/analysis/<file-name>.md
    ```
 
-8. **Offer to proceed with REASONS Canvas generation**
+7. **Offer to proceed with REASONS Canvas generation**
 
    > "The enriched context is ready. Would you like me to proceed with `/mbse-reasons-canvas` using this analysis as input?"
 
@@ -383,6 +409,8 @@ An enriched context document saved to `spdd/analysis/<file-name>.md` (updated in
 - Do NOT edit the story or the `sysml/` requirements model in this phase; model findings are recorded in the analysis and resolved downstream
 - Run both model gates before drawing findings from `sysml/`; a failing model is a blocker to report, never evidence
 - Do NOT let model content introduce requirements the story does not state (D-024); flag it as an inconsistency instead
+- System invariant impact MUST be assessed and recorded; a missing system-model allocation is a risk, not permission to skip it
+- Do NOT design invariant enforcement here; Phase 2 commits it and Phase 3 proves it with unit tests
 - Do NOT include implementation-level details (specific queries, JSON shapes, method signatures, annotations, component-layer inventories, step-by-step logic) — those belong in `/mbse-reasons-canvas`
 - Do NOT leave placeholders or TODO items — generate complete, specific content
 - Do NOT modify application/source files or unrelated existing files. The only permitted writes are the updated-or-generated analysis document and, after explicit user consent, the deferred-scope ledger described in Step 5.

@@ -59,10 +59,10 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
     - Confirm the consolidated context contains sufficient information to proceed
 
    e. **Resolve update vs. create mode (default: update in place)**:
-    - Extract the story/ticket identifier from the business input when available (same priority as Step 7: story number first, then explicit ticket, else no identifier).
+    - Extract the story/ticket identifier from the business input when available (same priority as Step 6: story number first, then explicit ticket, else no identifier).
     - If the input explicitly references an `@spdd/analysis/<file>.md`, that file is the update target — read it completely.
     - Otherwise list files in `spdd/analysis/` matching the identifier. When at least one match exists AND the user has not explicitly asked for a new analysis, select the latest matching file (by timestamp in the filename) as the update target and read it completely.
-    - Create a new file only when no match exists or the user explicitly asked for a new analysis. Record the resolved mode (update + target path, or create) and use it in Step 7.
+    - Create a new file only when no match exists or the user explicitly asked for a new analysis. Record the resolved mode (update + target path, or create) and use it in Step 6.
 
 2. **Concept-driven codebase exploration**
 
@@ -220,6 +220,24 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
 
    **IMPORTANT**: This step only applies to items that are **in scope** of the story being analyzed. Items that were explicitly "Out of scope" from the start, covered in another story, rejected alternatives, or pure design decisions must NOT be added to `deferred.md`.
 
+   f. **System invariant impact**:
+
+   Shared invariants are cross-cutting properties that must hold across stories and execution paths - for example derived-state consistency, cache invalidation, save/load integrity, permissions, or error handling. Per-story AC coverage does not catch them.
+
+    - Identify every shared invariant the story can affect. Consult the project's system-level inventory or model when one exists; if none exists, record that absence as a risk.
+    - For each invariant, state how it is enforced today (file, function, or process), whether the story's new path reuses that enforcement, and the gap or risk.
+    - Do not design the fix here: Phase 2 commits the enforcement point and its unit test; Phase 3 proves it.
+    - Do not edit code, stories, or models in this phase.
+
+   Output this subsection even when nothing is affected (`None identified - [reason]`):
+
+    ```markdown
+    #### System Invariant Impact
+    | Invariant | Enforced today | Story impact | Gap / Phase 2 action |
+    |---|---|---|---|
+    | [cross-cutting property] | [file/function/process] | [path or surface affected] | [reuse / extend / add call + unit test] |
+    ```
+
    Include the `#### Deferred Scope` subsection and its table **only if** at least one in-scope requirement was explicitly deferred with user consent. If there are no such deferred items, omit both the subsection and the table entirely; do not create an empty table or add a `None` row.
 
    Output the always-required parts of this section as:
@@ -240,6 +258,15 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
     | AC# | Description | Addressable? | Gaps/Notes |
     |-----|-------------|--------------|------------|
     | [n] | [AC text]   | Yes/Partial  | [any gaps]  |
+    ```
+
+   Then append the system invariant impact subsection (always present):
+
+    ```markdown
+    #### System Invariant Impact
+    | Invariant | Enforced today | Story impact | Gap / Phase 2 action |
+    |---|---|---|---|
+    | [cross-cutting property] | [file/function/process] | [path or surface affected] | [reuse / extend / add call + unit test] |
     ```
 
    If at least one in-scope requirement was explicitly deferred with user consent, append this subsection:
@@ -320,13 +347,14 @@ An existing analysis file can also be referenced directly (e.g. `@spdd/analysis/
    - New concepts required: [count]
    - Key design decisions: [count]
    - Acceptance Criteria coverage: [count]/[total]
+   - System invariants: [count identified] / [count with gaps]
    - Open questions/risks: [count]
 
    🔗 Next step: Use this as input for REASONS Canvas generation:
       /spdd-reasons-canvas @spdd/analysis/<file-name>.md
    ```
 
-8. **Offer to proceed with REASONS Canvas generation**
+7. **Offer to proceed with REASONS Canvas generation**
 
    > "The enriched context is ready. Would you like me to proceed with `/spdd-reasons-canvas` using this analysis as input?"
 
@@ -361,6 +389,8 @@ An enriched context document saved to `spdd/analysis/<file-name>.md` (updated in
 - Do not assume a particular work-management system when extracting ticket numbers
 - Acceptance Criteria coverage MUST assess every AC from the requirement
 - Risk & Gap Analysis MUST surface any ambiguities — do NOT silently assume
+- System invariant impact MUST be assessed and recorded for every story; a missing project inventory is a risk, not permission to skip it
+- Do NOT design invariant enforcement in this phase; Phase 2 commits it and Phase 3 proves it with unit tests
 - Deferred scope MUST be explicitly approved by the user via AskUserQuestion before being accepted
 - Include the `Deferred Scope` subsection and table only when at least one in-scope requirement was explicitly deferred with user consent; otherwise omit both and never emit an empty table or a `None` row
 - Any in-scope requirement deferred with user consent MUST be recorded in `spdd/analysis/deferred.md` (creating the file if needed)

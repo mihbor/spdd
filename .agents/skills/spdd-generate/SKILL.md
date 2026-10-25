@@ -140,12 +140,18 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
     - Ensure each AC is addressed by the implementation
     - Verify specified error codes, HTTP status codes, and messages match exactly when applicable
 
-   c. **Structure verification**:
+   c. **System-invariant verification (unit tests)**:
+    - For every row in the prompt's `System Invariant Enforcement` block, verify a checked-in unit test asserts the declared enforcement path (spy/mock call assertion or pure-value assertion), not just the domain outcome
+    - The test must fail if the enforcement call is removed; state-only assertions do not prove the invariant
+    - Run the test command and record the exact command and result for `spdd/done.md`; fix failures before proceeding
+    - Integration/browser tests are acceptable only when the invariant cannot be observed at unit level, and the prompt must state that justification
+
+   d. **Structure verification**:
     - Verify the architecture boundaries declared in the prompt are respected
     - Confirm dependency injection or equivalent wiring is correct when applicable
     - Check interface/implementation relationships
 
-   d. **Fix any issues found**:
+   e. **Fix any issues found**:
     - Fix compilation errors
     - Correct import statements
     - Ensure code follows project formatting standards
@@ -156,6 +162,7 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
     - List of created files with their responsibilities
     - Any deviations or assumptions made
     - Validation results (pass/fail for each check)
+    - System invariants: [rows committed / unit tests added / results]
 
    Then close the section opened in step 3 of `spdd/done.md`: fill
    Completed with the verification time (when the acceptance check passed —
@@ -163,7 +170,9 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
    time), Elapsed as finish minus start, Commit with the first line of the
    INTENDED commit message — craft it now (concise, conventional-commit
    format, e.g. "feat(ai): implement AI city founding for STORY-021-001" —
-   never use the hash), and Notes with the verification outcome.
+   never use the hash), and Notes with the verification outcome, including
+   each invariant row, its unit test file/case, the test command, and the
+   result. Prose-only verification is not completion.
 
    **Commit ordering (avoids amend/follow-up commits)**: the Commit field
    is filled BEFORE any commit is created. When the user requests a commit,
@@ -188,6 +197,7 @@ If issues are discovered after generation (during testing or code review), follo
     - Wrong implementation detail → Update **Operations**
     - Missing standard → Update **Norms**
     - Missing constraint → Update **Safeguards**
+    - Missing invariant enforcement or test → Update **Safeguards/Operations**
 
 3. **Update the prompt first**: Modify the relevant section in the prompt file
 
@@ -225,6 +235,8 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Always use the exact error messages from Safeguards
 - Always follow Norms for coding style and patterns
 - Always verify against Acceptance Criteria after generation
+- Do NOT close work whose prompt has `System Invariant Enforcement` rows without green unit tests; state-only verification is not evidence
+- System-invariant tests must be checked in and runnable; ad-hoc harness output is not completion, and any integration/browser exception must be stated in the prompt
 - Always open the `spdd/done.md` section at invocation (step 3) and close it only after verification (step 8); never mark complete at code-written time
 - Follow-up tweaks on work that is not yet signed off / committed update the latest `spdd/done.md` entry (earliest start, latest completion, recomputed elapsed, actual commit message) — never append a new FOLLOWUP section
 - Always record the intended commit message in the `spdd/done.md` Commit field BEFORE creating any commit, and stage `spdd/done.md` in that same commit; never commit first and backfill the log afterwards (no amend, no extra log-only commit)
