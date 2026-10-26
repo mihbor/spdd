@@ -29,6 +29,44 @@ python tools/validate-arcadia-traceability.py
 
 If either spec42 or validate-sysml is red, stop: report the first root cause and its `file:line`. Do not draw findings from a broken model. The allocation audit is a method gate; a red audit is a finding even when the syntax gates are green.
 
+## Review dimensions
+
+| Dimension | What it covers | Evidence |
+|---|---|---|
+| Methodological | boundary leaks, wrong element kind, allocation legality, realization semantics, mode/state classification, chain plausibility | manual inspection + `docs/arcadia-traceability.md` |
+| Tool-checkable | syntax, reference resolution, leaf/aggregate counts, PA nature, FE citations, coverage counts, duplicate names | the four gates above |
+
+A green gate proves only the tool-checkable dimension. "Green but wrong" is a **BLOCKED** review when a methodological blocker exists. Report the two dimensions separately; never let a passing gate suppress a manual finding.
+
+## Anti-patterns and severity
+
+| ID | Anti-pattern | Default severity | Detection |
+|---|---|---|---|
+| AP1 | Solution leakage upstream (OA/SA names software, modules, technology) | Blocker | layer boundary check |
+| AP2 | Technology, framework, protocol, storage, or `src/` in LA | Blocker | LA boundary check |
+| AP3 | Function allocated to a PA node/resource/implementation component | Blocker | allocation audit |
+| AP4 | Aggregate function allocated to a component | Blocker | allocation audit |
+| AP5 | Leaf function with more than one owner | Blocker | allocation audit |
+| AP6 | Leaf function unallocated | Major | allocation audit |
+| AP7 | Cross-component functional exchange with no component exchange | Major; Blocker on a critical chain | FE/CE review |
+| AP8 | Capability with no covering chain/scenario | Major | traceability audit |
+| AP9 | Orphan function/component that should participate in a chain | Major | traceability audit |
+| AP10 | Copy-paste instead of allocation/realization between layers | Major | traceability review |
+| AP11 | Renamed duplicate of an upstream element without an allocation link | Major | traceability audit |
+| AP12 | Nested modes/states or a mixed mode/state machine | Major | behavior review |
+| AP13 | Interface/port without an exchange item | Minor | interface review |
+| AP14 | Stringly-typed structured exchange payload | Major; Minor when the payload is explicitly opaque and justified | data review |
+| AP15 | Decorative `first/then` chain that does not express a real sequence | Major | chain review |
+| AP16 | Component with several unrelated responsibilities and no written rationale | Major | boundary review |
+
+**Severity definitions**
+
+- **Blocker**: violates a hard method invariant or makes allocation/traceability truth wrong. Fix before sign-off.
+- **Major**: incomplete or inconsistent, but the model is not structurally unusable. Fix or defer with explicit user consent.
+- **Minor**: naming, source line, documentation, formatting, or a justified exception. Triage, do not ignore.
+
+A finding needs evidence (`file:line` or a gate count). A finding closes only when the fix is verified or the deferral is recorded with user consent.
+
 ## Layer boundary checklist
 
 | Layer | Must contain | Must not contain |
@@ -108,16 +146,20 @@ Keep output small: read slices and summarize counts, do not dump whole models.
 
 ## Report format
 
-| Severity | Finding | Evidence | Fix |
-|----------|---------|----------|-----|
-| Blocker / Major / Minor | [what is wrong and why it matters] | `file:line` | [smallest correct fix] |
+| Severity | Anti-pattern | Finding | Evidence | Fix | Status |
+|---|---|---|---|---|---|
+| Blocker / Major / Minor | APn | [what is wrong and why it matters] | `file:line` or gate count | [smallest correct fix] | open / closed / deferred (consent) |
 
 End with:
 
 ```
 Verdict: PASS | PASS WITH FINDINGS | BLOCKED
+Dimensions: methodological PASS/FINDINGS; tool-checkable 0 errors / 0 warnings
 Gates: spec42 0 errors / 0 warnings; validate-sysml N files, 0 / 0
+Findings: 0 blockers, 0 majors, N minors
 ```
+
+Do not sign off with an open blocker or major. A minor must be triaged or explicitly accepted.
 
 ## Guardrails
 
@@ -125,4 +167,5 @@ Gates: spec42 0 errors / 0 warnings; validate-sysml N files, 0 / 0
 - Do not "fix" a red gate by deleting valid structure; identify the root cause.
 - Do not add review findings as model content; route requirement gaps through the SPDD/story amendment path.
 - Do not treat a green gate as a method-quality verdict; boundary and traceability checks are manual.
+- Do not sign off with an open blocker or major; fix it or record a user-approved deferral.
 - Keep tool output and the final report concise.
