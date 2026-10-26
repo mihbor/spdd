@@ -99,11 +99,31 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 - Realize, do not copy: a PA element that elaborates an LA element carries an allocation and a `Source:` line; it is not a renamed duplicate.
 - An upstream element with no downstream link goes to `spdd/analysis/deferred.md` only with user consent.
 
+## Vertical increments
+
+Use the PA component/connector seams to define integration order; do not invent a separate module
+map.
+
+- An increment is a **working vertical slice** with observable behavior, not a horizontal layer
+  step ("finish all rendering", "finish all persistence").
+- Contract-first: define the ports, interfaces, and exchange items the slice needs before parallel
+  implementation. The contract is the LA/PA seam, not a new API layer.
+- Each increment names the PA components/connectors it exercises, the LA components/functions it
+  covers, the observable behavior, and the verification that proves it.
+- An increment must not change game rules or invent a module. If it cannot be demonstrated
+  end-to-end through a PA component/connector path, it is not a vertical slice.
+- EPBS configuration items are delivery units (when EPBS is warranted), not increments. Do not
+  equate a CI, a layer, or a file list with an increment.
+- Maintain the slice map in `docs/arcadia-increments.md`, linked from
+  `ImplementationMapping.sysml`. Validate every referenced component/connector name against the
+  model; a stale name is a review finding.
+
 ## Quality checks
 
 - Every PA element is grounded: real path/config or a planned story.
 - Every PA component is classified `Nature: behavior` or `Nature: node`; every LA component is allocated to at least one behavioral PA component.
 - Every PA component is grounded and participates in at least one allocation or deployment connection; technical-only components are explicitly node/tooling.
+- Every increment in `docs/arcadia-increments.md` is a vertical slice with a named PA/LA path and a named verification; no stale names.
 - `sysml/system/` and PA agree with `src/`.
 - No game-rule changes, invented modules, secrets, or absolute local paths.
 - Both gates report 0 errors and 0 warnings.

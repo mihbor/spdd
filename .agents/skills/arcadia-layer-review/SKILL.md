@@ -58,6 +58,7 @@ A green gate proves only the tool-checkable dimension. "Green but wrong" is a **
 | AP14 | Stringly-typed structured exchange payload | Major; Minor when the payload is explicitly opaque and justified | data review |
 | AP15 | Decorative `first/then` chain that does not express a real sequence | Major | chain review |
 | AP16 | Component with several unrelated responsibilities and no written rationale | Major | boundary review |
+| AP17 | Horizontal-layer, file-list, or contract-less increment | Major | increment map review |
 
 **Severity definitions**
 
@@ -143,6 +144,17 @@ rg -n "^package |part def Capability_|action def |use case def |allocation def |
 ```
 
 Keep output small: read slices and summarize counts, do not dump whole models.
+
+## Increment slicing
+
+- `docs/arcadia-increments.md` is the planning view; it is not a new Arcadia layer.
+- Every row must name existing PA components/connectors and LA components/functions.
+- Every row must state observable behavior and a named verification. A row that is only a layer,
+  a file list, or a contract-less task is AP17 (Major).
+- Every increment must be demonstrable end-to-end through a PA component/connector path. If it
+  cannot, it is not a vertical slice.
+- EPBS configuration items are delivery units, not increments. Do not use a CI to justify a
+  horizontal slice.
 
 ## Report format
 
