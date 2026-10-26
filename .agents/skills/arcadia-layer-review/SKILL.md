@@ -21,9 +21,10 @@ Review an Arcadia model for method fidelity, traceability, and model hygiene. Th
 ```powershell
 spec42 check sysml --workspace-root sysml --format json
 powershell -File tools/validate-sysml.ps1
+python tools/validate-arcadia-allocation.py
 ```
 
-If either gate is red, stop: report the first root cause and its `file:line`. Do not draw findings from a broken model.
+If either spec42 or validate-sysml is red, stop: report the first root cause and its `file:line`. Do not draw findings from a broken model. The allocation audit is a method gate; a red audit is a finding even when the syntax gates are green.
 
 ## Layer boundary checklist
 
@@ -42,9 +43,11 @@ If either gate is red, stop: report the first root cause and its `file:line`. Do
 |---|---|---|
 | OA capability | SA capability/function | at least one |
 | OA activity | SA function allocation | every activity allocated or explicitly deferred with user consent |
-| SA function | LA component allocation | every function allocated |
-| LA component | PA component allocation | every component realized |
-| PA component | `src/` / config or planned story | every component grounded |
+| SA leaf function | LA component allocation | exactly one behavioral component |
+| SA aggregate function | no component allocation | decomposition only; children carry behavior |
+| SA functional exchange | LA component exchange | every cross-component FE realized by exactly one CE |
+| LA component | PA component allocation | every component realized by a behavioral PA component, never a node |
+| PA component | `src/` / config or planned story | every component grounded; technical-only components explicit |
 
 Also check:
 
@@ -54,10 +57,26 @@ Also check:
 - Every new file is in `tools/validate-sysml.ps1` `$Order` dependency-first.
 - Layer directories match `sysml/arcadia/<layer>/` and the topic files in the layer skill.
 
+## Allocation legality
+
+- Only leaf functions allocate. An aggregate function allocated to a component is a finding: remove the allocation, keep its leaf children.
+- Each leaf function has exactly one behavioral owner. Two owners is an error, not a trade-off.
+- Every LA-specific leaf function (routing/aggregation/orchestration) is allocated exactly once.
+- Every component owns at least one function unless it is a documented aggregate component.
+- Every cross-component functional exchange has exactly one component exchange; intra-component exchanges need none.
+- Every PA component has `Nature: behavior` or `Nature: node`; a behavioral LA component never allocates to a node.
+- A PA component with no LA counterpart is either a documented technical/node component or a finding.
+- A PA allocation with several targets has a written rationale; otherwise it is a review finding.
+
+When the SA layer uses the functional-exchange catalog fallback, verify each LA connection usage cites exactly one FE and each FE is cited once. A connection with neither an FE nor a documented deferral is a finding.
+
 ## Model hygiene
 
 - No orphan capabilities, functions, or components that should participate in a chain.
 - No duplicate semantic elements under different names.
+- No aggregate function allocation; no leaf function with multiple owners.
+- No function allocated to a PA node component; every PA component has a nature.
+- No functional exchange without a component exchange or a documented deferral.
 - No process history, review notes, or implementation logs in the model.
 - No tautological constraints or decorative `first/then` chains.
 - No reserved declaration names (`allocate`, `decide`, `first`, `then`, `state`, `transition`, `view`, `case`, `join`, `end`, ...).

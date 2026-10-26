@@ -52,12 +52,14 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 
 **Allocation syntax.** `allocate` needs feature usages, not definitions. Direct `allocate DefA to DefB` passes spec42 but fails the binding gate. Define package-level usages (`action generateWorld : GenerateWorld;`) or nested usages and allocate those. Do not name an element `allocate`; `allocateResearch` is safe.
 
+**Function decomposition and allocation.** Mark every system function as **leaf** or **aggregate** before allocating it downstream. A leaf function has no child action usages; an aggregate function exists only to decompose a capability or group and is documentary. Only leaf functions own ports/exchanges and only leaf functions are component-allocation candidates. An OA activity may be realized by an aggregate SA function, but at LA the aggregate's leaf children carry the allocation; never allocate the aggregate itself to a component. See `arcadia-logical-architecture` for the LA-side rule.
+
 **Do not use `satisfy` with a part-typed requirement subject and an action witness**: `validate-sysml` warns "Bound features should have conforming types". Use a conforming part witness, or record the trace in docs and keep the formal link in the requirements/system seam.
 
 ## Files and names
 
 - Directory: `sysml/arcadia/system-analysis/`.
-- Recommended topics: `SystemContext.sysml`, `SystemFunctions.sysml`, `SystemCapabilities.sysml`, `FunctionalChains.sysml`, `SystemInterfaces.sysml`, `OperationalAllocation.sysml`.
+- Recommended topics: `SystemContext.sysml`, `SystemFunctions.sysml`, `SystemCapabilities.sysml`, `FunctionalChains.sysml`, `SystemInterfaces.sysml`, `FunctionalExchanges.sysml`, `OperationalAllocation.sysml`.
 - One package per file. Package names use `PlanetCivArcadiaSystem<Topic>` and must be unique.
 - `private import ScalarValues::*;` plus explicit single-name imports. No cross-package wildcards.
 - `doc /* ... */` takes no trailing semicolon. Every definition carries a `Source:` line.
@@ -67,7 +69,7 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 
 1. Run the baseline gates. If the model is red, report the root cause and stop.
 2. Read the OA layer and scope. Write the system boundary and external actors; state what is inside and outside.
-3. Derive system functions from OA activities and capabilities. Include system-only functions (world generation, presentation, persistence, input, performance) only when they support an OA activity/capability or a documented quality need.
+3. Derive system functions from OA activities and capabilities. Mark each function as leaf or aggregate; decompose only as far as the level needs. Include system-only functions (world generation, presentation, persistence, input, performance) only when they support an OA activity/capability or a documented quality need.
 4. Group functions into system capabilities and trace each to an OA capability.
 5. Define functional chains for the critical operations: turn processing, new game, save/load, world generation, AI opposition, game end.
 6. Define exchange items and black-box interactions. Do not define internal component interfaces yet.
@@ -79,6 +81,7 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 
 - Every OA capability is supported by at least one SA capability/function.
 - Every OA activity is allocated to an SA function or explicitly deferred with consent.
+- Every SA function is marked leaf or aggregate; aggregate functions are not component-allocation candidates.
 - Every SA function is observable/testable and traces to an OA activity/capability or a documented quality need.
 - No logical components, internal ports, frameworks, file formats, code paths, or deployment.
 - AI and barbarians are system functions, not external actors; the human player remains external.

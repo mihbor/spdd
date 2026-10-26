@@ -28,7 +28,7 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 - Logical functions and their allocation to components.
 - Ports, interfaces, exchange items, and component connections.
 - Logical scenarios for critical chains.
-- Allocation of every SA function to at least one logical component.
+- Allocation of every leaf SA function to exactly one behavioral logical component; aggregate SA functions remain decompositions.
 
 **Out of scope — defer to PA**
 
@@ -60,10 +60,21 @@ If a candidate component is named after a code file or a library, it belongs in 
 - `allocate` needs feature usages, not definitions. Direct `allocate DefA to DefB` passes spec42 but fails the binding gate. Define usages and allocate those.
 - Do not use `satisfy` with a part-typed requirement subject and an action witness; it triggers a conforming-types warning.
 
+**Allocation legality (hard rule)**
+
+- Only **leaf** SA functions allocate to a component. An aggregate SA function is a decomposition; its leaf children carry the behavior and the allocation. Remove any `allocate sa.supportX to la.*` line.
+- Every leaf SA function allocates to **exactly one behavioral logical component**. Multiple owners are an error, not a design choice.
+- LA-specific leaf functions introduced by the structure (routing, aggregation, orchestration) are logical functions too; allocate each one to exactly one component.
+- Functions allocate to **behavioral** components only. A node/implementation component is a PA concern and never a function-allocation target.
+- Every component must own at least one function, except a documented aggregate component whose behavior is entirely in its child components.
+- Each cross-component functional exchange is realized by **exactly one** component exchange. Intra-component functional exchanges need no component exchange.
+- When the SA layer uses the documented functional-exchange catalog fallback (see `arcadia-system-analysis`), annotate each LA connection usage with the FE it realizes; structure-introduced exchanges belong in an LA catalog, not in SA. Do not hand-wave the mapping.
+- A component that realizes several unrelated upstream responsibilities (a "God" component) needs a written rationale in its doc block and a review finding until the boundaries are justified.
+
 ## Files and names
 
 - Directory: `sysml/arcadia/logical/`.
-- Recommended topics: `LogicalComponents.sysml`, `LogicalFunctions.sysml`, `LogicalInterfaces.sysml`, `LogicalScenarios.sysml`, `SystemFunctionAllocation.sysml`.
+- Recommended topics: `LogicalComponents.sysml`, `LogicalFunctions.sysml`, `LogicalInterfaces.sysml`, `LogicalScenarios.sysml`, `SystemFunctionAllocation.sysml`, `LogicalFunctionalExchanges.sysml`.
 - One package per file. Package names use `PlanetCivArcadiaLogical<Topic>` and must be unique.
 - `private import ScalarValues::*;` plus explicit single-name imports. No cross-package wildcards.
 - `doc /* ... */` takes no trailing semicolon. Every definition carries a `Source:` line naming the SA function/capability and the requirement source.
@@ -75,15 +86,17 @@ If a candidate component is named after a code file or a library, it belongs in 
 2. Read the SA functions and OA intent. Derive candidate components from cohesion, coupling, change rate, and lifecycle boundaries; avoid one component per function.
 3. Write component responsibilities and the logical functions each component owns. Name components after their responsibility, not after code files.
 4. Define exchange items and ports. Connect components with typed connections; document the direction and purpose of each interface.
-5. Allocate every SA function to at least one component in `SystemFunctionAllocation.sysml`. No orphan functions or components.
+5. Allocate every leaf SA function to exactly one behavioral component in `SystemFunctionAllocation.sysml`; leave aggregate SA functions unallocated. Allocate LA-specific leaf functions too. No orphan functions or components.
 6. Add logical scenarios for critical chains: turn processing, new game, save/load, world generation, AI opposition, game end.
 7. Update `tools/validate-sysml.ps1` `$Order` with OA/SA before LA, and LA dependencies first.
 8. Run both gates and report the counts.
 
 ## Quality checks
 
-- Every SA function is allocated to at least one logical component.
+- Every leaf SA function is allocated to exactly one behavioral logical component; aggregate SA functions are not allocated.
+- Every LA-specific leaf function is allocated exactly once.
 - Every component has at least one responsibility; every port/interface has a purpose.
+- Every cross-component functional exchange has exactly one component exchange; intra-component exchanges are internal.
 - Exchange items are defined as `item def`, not stringly-typed placeholders.
 - No technology, framework, deployment, file format, or `src/` path appears in the layer.
 - Component boundaries are justified; the layer does not mirror code modules (that is PA).
