@@ -118,21 +118,38 @@ map.
   `ImplementationMapping.sysml`. Validate every referenced component/connector name against the
   model; a stale name is a review finding.
 
+## Physical link mapping
+
+Every LA component exchange has a physical realization decision:
+
+- Map it to exactly one PA platform link with
+  `allocate logicalArchitecture.<exchange> to deployment.<link>;` when it leaves the browser
+  process (for example input on `DomInputLink` or presentation on `FrameUpdateLink`).
+- Or document it as **internal** to the browser process when both endpoints are PA components
+  hosted in `BrowserClient`; in-process calls do not need an external physical link.
+- Do not invent an LA exchange for a PA-only link (`storage`, `xrSession`, `assets`, `build`,
+  `testReport`, `hosting`).
+- Keep the mapping in `sysml/arcadia/physical/PhysicalLinkMapping.sysml` and
+  `docs/arcadia-link-mapping.md`; run `python tools/validate-arcadia-link-mapping.py`.
+- No critical-slice component exchange may be unmapped without an explicit internal rationale.
+
 ## Quality checks
 
 - Every PA element is grounded: real path/config or a planned story.
 - Every PA component is classified `Nature: behavior` or `Nature: node`; every LA component is allocated to at least one behavioral PA component.
 - Every PA component is grounded and participates in at least one allocation or deployment connection; technical-only components are explicitly node/tooling.
 - Every increment in `docs/arcadia-increments.md` is a vertical slice with a named PA/LA path and a named verification; no stale names.
+- Every LA component exchange is mapped to one PA link or documented internal; no critical-slice exchange is unmapped.
 - `sysml/system/` and PA agree with `src/`.
 - No game-rule changes, invented modules, secrets, or absolute local paths.
-- Both gates report 0 errors and 0 warnings.
+- All model gates report 0 errors and 0 warnings.
 
 ## Validation
 
 ```powershell
 spec42 check sysml --workspace-root sysml --format json
 powershell -File tools/validate-sysml.ps1
+python tools/validate-arcadia-link-mapping.py
 ```
 
 A green check proves syntax and reference resolution, not that PA matches the code. Review the mapping against `src/` by hand.

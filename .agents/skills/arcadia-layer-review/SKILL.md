@@ -25,6 +25,8 @@ spec42 check sysml --workspace-root sysml --format json
 powershell -File tools/validate-sysml.ps1
 python tools/validate-arcadia-allocation.py
 python tools/validate-arcadia-traceability.py
+python tools/validate-arcadia-function-io.py
+python tools/validate-arcadia-link-mapping.py
 ```
 
 If either spec42 or validate-sysml is red, stop: report the first root cause and its `file:line`. Do not draw findings from a broken model. The allocation audit is a method gate; a red audit is a finding even when the syntax gates are green.
@@ -59,6 +61,10 @@ A green gate proves only the tool-checkable dimension. "Green but wrong" is a **
 | AP15 | Decorative `first/then` chain that does not express a real sequence | Major | chain review |
 | AP16 | Component with several unrelated responsibilities and no written rationale | Major | boundary review |
 | AP17 | Horizontal-layer, file-list, or contract-less increment | Major | increment map review |
+| AP18 | Leaf function without typed I/O or a `No external flow:` rationale | Major | function I/O audit |
+| AP19 | Chain transition without an FE or control continuity entry | Major | function I/O audit |
+| AP20 | Parent port not delegated to its implementing child, or an unreachable child port | Major | delegation review |
+| AP21 | LA component exchange without a PA link mapping or an explicit internal rationale | Major | link-mapping audit |
 
 **Severity definitions**
 
@@ -123,6 +129,10 @@ When the SA layer uses the functional-exchange catalog fallback, verify each LA 
 ## Model hygiene
 
 - No orphan capabilities, functions, or components that should participate in a chain.
+- No leaf function without typed I/O or a documented no-flow rationale.
+- No chain transition without an FE or control continuity entry.
+- No parent port without a child delegation or a documented direct-use rationale; no unreachable child port.
+- No LA component exchange without a PA link mapping or an explicit internal rationale.
 - No duplicate semantic elements under different names.
 - No aggregate function allocation; no leaf function with multiple owners.
 - No function allocated to a PA node component; every PA component has a nature.
@@ -167,7 +177,7 @@ End with:
 ```
 Verdict: PASS | PASS WITH FINDINGS | BLOCKED
 Dimensions: methodological PASS/FINDINGS; tool-checkable 0 errors / 0 warnings
-Gates: spec42 0 errors / 0 warnings; validate-sysml N files, 0 / 0
+Gates: spec42 0 errors / 0 warnings; validate-sysml N files, 0 / 0; allocation OK; traceability OK; function I/O OK; delegation OK; link mapping OK
 Findings: 0 blockers, 0 majors, N minors
 ```
 

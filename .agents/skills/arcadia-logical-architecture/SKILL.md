@@ -57,6 +57,7 @@ If a candidate component is named after a code file or a library, it belongs in 
 - Use `connection def` for component-to-component links and `port def` for interaction points.
 - Do not use `interface def` with part-typed ends: the binding validator interprets `end` as a port and fails. Use `connection def`.
 - Match port directions. Separate provider/consumer port defs are the validated pattern; connecting a port to another with incompatible `in`/`out` features warns `flow_direction_incompatible`.
+- Delegate parent ports to the child that implements them: `bind parentIn = child.requestIn;` for inputs and `bind child.updateOut = parentOut;` for outputs. The `bind` form is the validated delegation pattern; do not use a flow `connect` for same-direction ports. A parent port used directly by its own function is documented; an unbound child port is a finding.
 - `allocate` needs feature usages, not definitions. Direct `allocate DefA to DefB` passes spec42 but fails the binding gate. Define usages and allocate those.
 - Do not use `satisfy` with a part-typed requirement subject and an action witness; it triggers a conforming-types warning.
 
@@ -85,7 +86,7 @@ If a candidate component is named after a code file or a library, it belongs in 
 1. Run the baseline gates. If the model is red, report the root cause and stop.
 2. Read the SA functions and OA intent. Derive candidate components from cohesion, coupling, change rate, and lifecycle boundaries; avoid one component per function.
 3. Write component responsibilities and the logical functions each component owns. Name components after their responsibility, not after code files.
-4. Define exchange items and ports. Connect components with typed connections; document the direction and purpose of each interface.
+4. Define exchange items and ports. Connect components with typed connections; delegate parent ports to the child ports that implement them, and document ports used directly by the parent. Document the direction and purpose of each interface.
 5. Allocate every leaf SA function to exactly one behavioral component in `SystemFunctionAllocation.sysml`; leave aggregate SA functions unallocated. Allocate LA-specific leaf functions too. No orphan functions or components.
 6. Add logical scenarios for critical chains: turn processing, new game, save/load, world generation, AI opposition, game end.
 7. Update `tools/validate-sysml.ps1` `$Order` with OA/SA before LA, and LA dependencies first.
@@ -109,18 +110,21 @@ If a candidate component is named after a code file or a library, it belongs in 
 - Every leaf SA function is allocated to exactly one behavioral logical component; aggregate SA functions are not allocated.
 - Every LA-specific leaf function is allocated exactly once.
 - Every component has at least one responsibility; every port/interface has a purpose.
+- Every parent port is delegated to the implementing child port or documented as directly used; no child service port is unreachable.
 - Every cross-component functional exchange has exactly one component exchange; intra-component exchanges are internal.
+- SA chain continuity is preserved: every SA transition is backed by an FE or a documented control edge, and the LA scenario carries the critical path.
 - Exchange items are defined as `item def`, not stringly-typed placeholders; reuse SA item types and use `ref` for item payloads.
 - Every mode/state follows the classification in `../arcadia-system-analysis/references/modes-states-and-data.md`; no nesting.
 - No technology, framework, deployment, file format, or `src/` path appears in the layer.
 - Component boundaries are justified; the layer does not mirror code modules (that is PA).
-- Both gates report 0 errors and 0 warnings.
+- All model gates report 0 errors and 0 warnings.
 
 ## Validation
 
 ```powershell
 spec42 check sysml --workspace-root sysml --format json
 powershell -File tools/validate-sysml.ps1
+python tools/validate-arcadia-function-io.py
 ```
 
 A green check proves syntax and reference resolution, not method quality. Review the technology-agnostic boundary by hand.
