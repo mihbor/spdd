@@ -16,6 +16,8 @@ Review an Arcadia model for method fidelity, traceability, and model hygiene. Th
 - One layer (`operational`, `system-analysis`, `logical`, `physical`) or the whole chain.
 - Before committing a layer change, after a layer is added, or when the model is "green but wrong".
 
+Behavior/data classification details: `../arcadia-system-analysis/references/modes-states-and-data.md`.
+
 ## Gates first
 
 ```powershell
@@ -77,6 +79,8 @@ When the SA layer uses the functional-exchange catalog fallback, verify each LA 
 - No aggregate function allocation; no leaf function with multiple owners.
 - No function allocated to a PA node component; every PA component has a nature.
 - No functional exchange without a component exchange or a documented deferral.
+- No nested modes/states or mixed mode/state machine; every mode/state is classified and lists its available functions.
+- No stringly-typed structured exchange payload; opaque payloads are justified.
 - No process history, review notes, or implementation logs in the model.
 - No tautological constraints or decorative `first/then` chains.
 - No reserved declaration names (`allocate`, `decide`, `first`, `then`, `state`, `transition`, `view`, `case`, `join`, `end`, ...).

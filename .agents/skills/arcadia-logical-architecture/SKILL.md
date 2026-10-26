@@ -97,7 +97,8 @@ If a candidate component is named after a code file or a library, it belongs in 
 - Every LA-specific leaf function is allocated exactly once.
 - Every component has at least one responsibility; every port/interface has a purpose.
 - Every cross-component functional exchange has exactly one component exchange; intra-component exchanges are internal.
-- Exchange items are defined as `item def`, not stringly-typed placeholders.
+- Exchange items are defined as `item def`, not stringly-typed placeholders; reuse SA item types and use `ref` for item payloads.
+- Every mode/state follows the classification in `../arcadia-system-analysis/references/modes-states-and-data.md`; no nesting.
 - No technology, framework, deployment, file format, or `src/` path appears in the layer.
 - Component boundaries are justified; the layer does not mirror code modules (that is PA).
 - Both gates report 0 errors and 0 warnings.
@@ -114,5 +115,6 @@ A green check proves syntax and reference resolution, not method quality. Review
 ## References
 
 - Upstream: `sysml/arcadia/system-analysis/`, `sysml/arcadia/operational/`.
+- Behavior and data: `../arcadia-system-analysis/references/modes-states-and-data.md`.
 - Sources: `requirements/`, `docs/`.
 - Companion skills: `arcadia-system-analysis`, `arcadia-physical-architecture`, `spec42-check`, `sysmlv2-skill`, `story-to-sysml`.

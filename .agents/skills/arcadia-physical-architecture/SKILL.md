@@ -108,6 +108,7 @@ A green check proves syntax and reference resolution, not that PA matches the co
 ## References
 
 - Upstream: `sysml/arcadia/logical/`.
+- Behavior and data: `../arcadia-system-analysis/references/modes-states-and-data.md`.
 - Code mirror: `sysml/system/`.
 - Sources: `src/`, `package.json`, `vite.config.ts`, `tsconfig.json`.
 - Companion skills: `arcadia-logical-architecture`, `spec42-check`, `sysmlv2-skill`, `story-to-sysml`.

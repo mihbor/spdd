@@ -54,12 +54,14 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 
 **Function decomposition and allocation.** Mark every system function as **leaf** or **aggregate** before allocating it downstream. A leaf function has no child action usages; an aggregate function exists only to decompose a capability or group and is documentary. Only leaf functions own ports/exchanges and only leaf functions are component-allocation candidates. An OA activity may be realized by an aggregate SA function, but at LA the aggregate's leaf children carry the allocation; never allocate the aggregate itself to a component. See `arcadia-logical-architecture` for the LA-side rule.
 
+**Modes, states, and data.** Read `references/modes-states-and-data.md` before adding behavior or exchange items. Use the chosen-vs-undergone test: modes are commanded functional configurations, states are undergone conditions. Keep them in separate machines, never nested. Every mode lists its available leaf functions. Exchange items are `item def`s with typed attributes/enums; use `ref` for item-typed payloads and mark genuinely opaque payloads with a justification. Reuse SA item types downstream.
+
 **Do not use `satisfy` with a part-typed requirement subject and an action witness**: `validate-sysml` warns "Bound features should have conforming types". Use a conforming part witness, or record the trace in docs and keep the formal link in the requirements/system seam.
 
 ## Files and names
 
 - Directory: `sysml/arcadia/system-analysis/`.
-- Recommended topics: `SystemContext.sysml`, `SystemFunctions.sysml`, `SystemCapabilities.sysml`, `FunctionalChains.sysml`, `SystemInterfaces.sysml`, `FunctionalExchanges.sysml`, `OperationalAllocation.sysml`.
+- Recommended topics: `SystemContext.sysml`, `SystemFunctions.sysml`, `SystemModesAndStates.sysml`, `SystemCapabilities.sysml`, `FunctionalChains.sysml`, `SystemInterfaces.sysml`, `FunctionalExchanges.sysml`, `OperationalAllocation.sysml`.
 - One package per file. Package names use `PlanetCivArcadiaSystem<Topic>` and must be unique.
 - `private import ScalarValues::*;` plus explicit single-name imports. No cross-package wildcards.
 - `doc /* ... */` takes no trailing semicolon. Every definition carries a `Source:` line.
@@ -72,16 +74,19 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 3. Derive system functions from OA activities and capabilities. Mark each function as leaf or aggregate; decompose only as far as the level needs. Include system-only functions (world generation, presentation, persistence, input, performance) only when they support an OA activity/capability or a documented quality need.
 4. Group functions into system capabilities and trace each to an OA capability.
 5. Define functional chains for the critical operations: turn processing, new game, save/load, world generation, AI opposition, game end.
-6. Define exchange items and black-box interactions. Do not define internal component interfaces yet.
-7. Allocate every OA activity to at least one SA function in `OperationalAllocation.sysml`. If an in-scope OA activity is deferred, get user consent and record it in `spdd/analysis/deferred.md`; never drop it silently.
-8. Update `tools/validate-sysml.ps1` `$Order` with OA before SA, and SA dependencies first.
-9. Run both gates and report the counts.
+6. Define modes and states for the dynamic behavior: turn phases, pause/resume, loading, game over. Keep modes and states in separate machines and list the leaf functions available in each.
+7. Define exchange items and black-box interactions with typed attributes/enums. Do not define internal component interfaces yet.
+8. Allocate every OA activity to at least one SA function in `OperationalAllocation.sysml`. If an in-scope OA activity is deferred, get user consent and record it in `spdd/analysis/deferred.md`; never drop it silently.
+9. Update `tools/validate-sysml.ps1` `$Order` with OA before SA, and SA dependencies first.
+10. Run both gates and report the counts.
 
 ## Quality checks
 
 - Every OA capability is supported by at least one SA capability/function.
 - Every OA activity is allocated to an SA function or explicitly deferred with consent.
 - Every SA function is marked leaf or aggregate; aggregate functions are not component-allocation candidates.
+- Every mode/state machine is classified (`Mode:` or `State:`), non-nested, and documents available leaf functions.
+- Exchange items are typed; structured payloads are not bare strings; opaque payloads are justified.
 - Every SA function is observable/testable and traces to an OA activity/capability or a documented quality need.
 - No logical components, internal ports, frameworks, file formats, code paths, or deployment.
 - AI and barbarians are system functions, not external actors; the human player remains external.
@@ -100,5 +105,6 @@ A green check proves syntax and reference resolution, not method quality. Review
 ## References
 
 - Upstream: `sysml/arcadia/operational/`.
+- Behavior and data: `references/modes-states-and-data.md`.
 - Sources: `requirements/`, `docs/game-description.md`, `docs/Glossary.md`, `requirements/decisions.md`.
 - Companion skills: `arcadia-operational-analysis`, `spec42-check`, `sysmlv2-skill`, `story-to-sysml`.
