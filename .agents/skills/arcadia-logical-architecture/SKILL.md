@@ -91,6 +91,19 @@ If a candidate component is named after a code file or a library, it belongs in 
 7. Update `tools/validate-sysml.ps1` `$Order` with OA/SA before LA, and LA dependencies first.
 8. Run both gates and report the counts.
 
+## Traceability (hard matrix)
+
+| Upstream | Downstream | Required |
+|---|---|---|
+| SA leaf function | LA component allocation | exactly one behavioral component |
+| SA aggregate function | LA component allocation | none; its leaves carry the allocation |
+| SA functional exchange | LA component exchange | exactly one component exchange per cross-component FE |
+| SA capability | LA scenario or SA chain | at least one covering scenario/chain for the capability's owned leaves |
+| LA component | PA component allocation | at least one behavioral PA component, never a node |
+
+- Realize, do not copy: a downstream element uses an allocation link and a `Source:` line; it is not a renamed duplicate. Deliberate structural additions (routing/aggregation functions, runtime components) need a rationale and a source.
+- An upstream element with no downstream link goes to `spdd/analysis/deferred.md` only with user consent; never drop it silently.
+
 ## Quality checks
 
 - Every leaf SA function is allocated to exactly one behavioral logical component; aggregate SA functions are not allocated.

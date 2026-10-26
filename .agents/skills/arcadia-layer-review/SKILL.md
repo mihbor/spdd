@@ -24,6 +24,7 @@ Behavior/data classification details: `../arcadia-system-analysis/references/mod
 spec42 check sysml --workspace-root sysml --format json
 powershell -File tools/validate-sysml.ps1
 python tools/validate-arcadia-allocation.py
+python tools/validate-arcadia-traceability.py
 ```
 
 If either spec42 or validate-sysml is red, stop: report the first root cause and its `file:line`. Do not draw findings from a broken model. The allocation audit is a method gate; a red audit is a finding even when the syntax gates are green.
@@ -45,6 +46,7 @@ If either spec42 or validate-sysml is red, stop: report the first root cause and
 |---|---|---|
 | OA capability | SA capability/function | at least one |
 | OA activity | SA function allocation | every activity allocated or explicitly deferred with user consent |
+| SA capability | functional chain or scenario | every leaf function owned by the capability appears in at least one chain/scenario |
 | SA leaf function | LA component allocation | exactly one behavioral component |
 | SA aggregate function | no component allocation | decomposition only; children carry behavior |
 | SA functional exchange | LA component exchange | every cross-component FE realized by exactly one CE |
@@ -58,6 +60,13 @@ Also check:
 - Each layer uses the correct package prefix (`PlanetCivArcadiaOperational*`, `...System*`, `...Logical*`, `...Physical*`); names are unique workspace-wide.
 - Every new file is in `tools/validate-sysml.ps1` `$Order` dependency-first.
 - Layer directories match `sysml/arcadia/<layer>/` and the topic files in the layer skill.
+
+## Realization, not copy-paste
+
+- A downstream element that elaborates an upstream element carries an allocation/realization link and a `Source:` line; it is not a renamed copy.
+- A deliberate structural addition (LA routing function, PA runtime component) is allowed only with a rationale and a source.
+- An upstream element with no downstream link is a finding unless it is in `spdd/analysis/deferred.md` with user consent.
+- The traceability report (`docs/arcadia-traceability.md`) is the evidence; a green syntax gate does not substitute for it.
 
 ## Allocation legality
 

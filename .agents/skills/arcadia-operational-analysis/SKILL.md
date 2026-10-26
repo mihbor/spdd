@@ -75,6 +75,18 @@ Do not use `satisfy` with a part-typed requirement subject and an action witness
 8. Update `tools/validate-sysml.ps1` `$Order` dependency-first: actors/entities, activities, capabilities/scenarios, context.
 9. Run both gates, fix root causes, and report the counts.
 
+## Traceability (hard matrix)
+
+| Upstream | Downstream | Required |
+|---|---|---|
+| OA capability | SA capability/function | at least one |
+| OA activity | SA function allocation | every activity allocated or explicitly deferred with user consent |
+| OA activity | noun in an OA capability | every leaf activity has a home |
+| OA capability | SA functional chain/scenario | at least one downstream chain/scenario covers the capability's activities |
+
+- Realize, do not copy: downstream layers allocate/realize OA elements; they do not restate them under new names. A deliberate new element needs a source and a rationale.
+- An OA element with no downstream link goes to `spdd/analysis/deferred.md` only with user consent; never drop it silently.
+
 ## Quality checks
 
 - Every actor/entity participates in at least one activity or context interaction.

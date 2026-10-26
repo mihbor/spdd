@@ -87,6 +87,18 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 7. Update `tools/validate-sysml.ps1` `$Order` with OA → SA → LA before PA, and PA dependencies first.
 8. Run both gates and report the counts.
 
+## Traceability (hard matrix)
+
+| Upstream | Downstream | Required |
+|---|---|---|
+| LA component | PA component allocation | at least one behavioral PA component; never a node |
+| LA component with no PA counterpart | documented deferral | user consent; never a silent gap |
+| PA component | `src/` / config or planned story | a `Source:` line or explicit `Planned` marker |
+| PA technical-only component | deployment/implementation mapping | explicit node/tooling nature and grounding |
+
+- Realize, do not copy: a PA element that elaborates an LA element carries an allocation and a `Source:` line; it is not a renamed duplicate.
+- An upstream element with no downstream link goes to `spdd/analysis/deferred.md` only with user consent.
+
 ## Quality checks
 
 - Every PA element is grounded: real path/config or a planned story.

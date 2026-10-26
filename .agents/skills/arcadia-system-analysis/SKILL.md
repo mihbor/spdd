@@ -80,6 +80,20 @@ This is a modeling track, not an SPDD phase. It does not renumber or replace the
 9. Update `tools/validate-sysml.ps1` `$Order` with OA before SA, and SA dependencies first.
 10. Run both gates and report the counts.
 
+## Traceability (hard matrix)
+
+| Upstream | Downstream | Required |
+|---|---|---|
+| OA activity | SA function allocation | every activity allocated or explicitly deferred with user consent |
+| OA capability | SA capability/function | at least one |
+| SA capability | functional chain or scenario | every leaf function owned by the capability appears in at least one chain/scenario; aggregate functions expand to their leaves |
+| SA leaf function | LA component allocation | exactly one behavioral component |
+| SA aggregate function | LA component allocation | none; decomposition only |
+
+- Realize, do not copy: a downstream element that elaborates an upstream element carries an allocation/realization link and a `Source:` line, not a renamed duplicate. Deliberate structural additions (for example an LA routing function) need a rationale and a source.
+- An upstream element with no downstream link goes to `spdd/analysis/deferred.md` only with user consent; never drop it silently.
+- Run `python tools/validate-arcadia-traceability.py` before sign-off.
+
 ## Quality checks
 
 - Every OA capability is supported by at least one SA capability/function.
