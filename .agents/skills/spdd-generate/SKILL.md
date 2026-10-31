@@ -42,6 +42,7 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
    ## <STORY-ID>
 
    - Prompt: `<prompt filename>`
+   - Model: <active model ID>
    - Impl start: <now, local time>
    - Completed:
    - Elapsed:
@@ -49,12 +50,17 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
    - Notes:
    ```
 
-   Derive the story ID from the prompt filename. Record Impl start as the
-   actual current local time at the moment generation is invoked — read the
-   clock; never estimate it and never copy timestamps from analysis/prompt
-   filenames or neighboring log rows, which belong to earlier SPDD phases.
-   Leave the remaining fields empty until step 8. Never backfill completion
-   at this stage: the section stays open until the result is verified.
+   Derive the story ID from the prompt filename. Record Model with the
+   identifier of the model actually executing this generation, exactly as the
+   runtime reports it (for example `opencode-go/deepseek-v4.1-flash`); never
+   infer it from the prompt, prior log entries, or the conversation. If the
+   runtime exposes no model identifier, record `unknown` and say why in Notes.
+   Record Impl start as the actual current local time at the moment generation
+   is invoked — read the clock; never estimate it and never copy timestamps
+   from analysis/prompt filenames or neighboring log rows, which belong to
+   earlier SPDD phases. Leave the remaining fields empty until step 8. Never
+   backfill completion at this stage: the section stays open until the result
+   is verified.
 
 4. **Analyze project context**
 
@@ -164,15 +170,16 @@ Generate implementation code from a structured SPDD (Structured Prompt-Driven De
     - Validation results (pass/fail for each check)
     - System invariants: [rows committed / unit tests added / results]
 
-   Then close the section opened in step 3 of `spdd/done.md`: fill
-   Completed with the verification time (when the acceptance check passed —
-   headset confirmation, test run, or equivalent — never the code-written
-   time), Elapsed as finish minus start, Commit with the first line of the
-   INTENDED commit message — craft it now (concise, conventional-commit
-   format, e.g. "feat(ai): implement AI city founding for STORY-021-001" —
-   never use the hash), and Notes with the verification outcome, including
-   each invariant row, its unit test file/case, the test command, and the
-   result. Prose-only verification is not completion.
+   Then close the section opened in step 3 of `spdd/done.md`: keep the
+   recorded Model identifier, fill Completed with the verification time (when
+   the acceptance check passed — headset confirmation, test run, or
+   equivalent — never the code-written time), Elapsed as finish minus start,
+   Commit with the first line of the INTENDED commit message — craft it now
+   (concise, conventional-commit format, e.g. "feat(ai): implement AI city
+   founding for STORY-021-001" — never use the hash), and Notes with the
+   verification outcome, including each invariant row, its unit test
+   file/case, the test command, and the result. Prose-only verification is
+   not completion.
 
    **Commit ordering (avoids amend/follow-up commits)**: the Commit field
    is filled BEFORE any commit is created. When the user requests a commit,
@@ -203,7 +210,7 @@ If issues are discovered after generation (during testing or code review), follo
 
 4. **Regenerate affected code**: Only regenerate the components affected by the prompt change
 
-5. **Update `spdd/done.md`, do NOT append**: If the work being followed up on is not yet signed off / committed, update the latest `spdd/done.md` entry instead of opening a new section. Keep the earliest Impl start, extend Completed to the latest verification time, recompute Elapsed as the diff, amend Prompt/Notes with the follow-up rounds, and set Commit to the actual commit message once known. A new section is only opened for a fresh invocation after sign-off/commit.
+5. **Update `spdd/done.md`, do NOT append**: If the work being followed up on is not yet signed off / committed, update the latest `spdd/done.md` entry instead of opening a new section. Keep the earliest Impl start, extend Completed to the latest verification time, recompute Elapsed as the diff, amend Prompt/Notes with the follow-up rounds, and set Commit to the actual commit message once known. Keep the existing Model; if a follow-up round runs on a different model, append that identifier to Model in round order so every model that touched the work stays recorded. A new section is only opened for a fresh invocation after sign-off/commit.
 
 5. **Commit together when requested**: If the user explicitly requests a commit, commit the updated prompt and code together (plus the `spdd/done.md` log entry recording that exact message) to maintain traceability; otherwise leave the changes for user review
 
@@ -238,6 +245,7 @@ Issue: "AgentService interface shouldn't contain business logic"
 - Do NOT close work whose prompt has `System Invariant Enforcement` rows without green unit tests; state-only verification is not evidence
 - System-invariant tests must be checked in and runnable; ad-hoc harness output is not completion, and any integration/browser exception must be stated in the prompt
 - Always open the `spdd/done.md` section at invocation (step 3) and close it only after verification (step 8); never mark complete at code-written time
+- Always record the executing model identifier in the `spdd/done.md` Model field from runtime metadata; never invent it or omit the field
 - Follow-up tweaks on work that is not yet signed off / committed update the latest `spdd/done.md` entry (earliest start, latest completion, recomputed elapsed, actual commit message) — never append a new FOLLOWUP section
 - Always record the intended commit message in the `spdd/done.md` Commit field BEFORE creating any commit, and stage `spdd/done.md` in that same commit; never commit first and backfill the log afterwards (no amend, no extra log-only commit)
 - Always check for and fix linter errors after batch generation
